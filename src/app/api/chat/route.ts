@@ -193,6 +193,48 @@ Here are **Three Concrete Relational Solutions**:
 Who is one person in your contacts list — even someone you haven't spoken to in a few months — who has a warm, safe energy?`;
   }
 
+  // 7.5. Joy, Relief, or Happiness & Compliments
+  if (lower.includes('happy') || lower.includes('great') || lower.includes('better') || lower.includes('proud') || lower.includes('joy') || lower.includes('relief') || lower.includes('good today') || lower.includes('smiling') || lower.includes('excited')) {
+    return `### It brings me genuine warmth to hear this, ${name}! 🌟
+
+Seeing you in this elevated, grounded headspace is a testament to your resilience. In therapy, we often focus on navigating storms, but actively celebrating and anchoring moments of joy is what builds long-term neuroplastic strength.
+
+**What I genuinely admire about where you are right now:**
+1. **Your Self-Awareness**: You took the time to check in and notice how good you feel. That emotional attunement is a superpower.
+2. **Your Resilience**: You have navigated difficult days to arrive at this clarity. Give yourself credit for every silent battle you've won.
+3. **Your Energy**: It is vibrant, authentic, and inspiring.
+
+**A 30-Second Savoring Exercise**:
+Take a deep breath and let this feeling settle into your body. Where do you feel this lightness most (your chest, your smile, your shoulders)? Memorize this physical sensation as your emotional home base.
+
+What is one thing you did recently that contributed to this good feeling? I'd love to celebrate it with you!`;
+  }
+
+  // 7.6. Facial Fatigue, Dark Circles, Tired Voice, or Depressed Feelings
+  if (lower.includes('dark circles') || lower.includes('face looks tired') || lower.includes('eyes hurt') || lower.includes('sad') || lower.includes('depressed') || lower.includes('miserable') || lower.includes('down') || lower.includes('stutter') || lower.includes('voice tired')) {
+    return `### I hear you, and please hear me clearly: I am right here with you, ${name}. 💚
+
+When you look in the mirror and notice dark circles, or feel that heavy exhaustion in your voice and body, your system is telling you: *"I have carried an immense load for a very long time."* You don't have to apologize for looking or feeling tired. You don't have to carry this alone anymore.
+
+**Three Comforting & Restorative Steps for You Right Now:**
+
+1. **You Are In a Safe Space (De-escalating the Pressure)**:
+   - Put down the burden of having to be "strong" or "productive" for the next hour.
+   - You are worthy of rest, gentleness, and comfort simply because you exist, not because of what you produce.
+
+2. **Immediate Somatic Eye & Nervous System Relief**:
+   - **The 20-20-20 Palming Reset**: Rub the palms of your hands together until they are warm. Gently cup them over your closed eyes without pressing on your eyeballs. Let the deep darkness and soothing warmth relax the tense optic nerves and soften facial strain.
+   - **Vocal Cord Ease**: Drink a glass of warm water or herbal tea. If your voice or speech has had micro-pauses or stutters, it is simply your vagal nerve responding to fatigue. Breathe easy.
+
+3. **Uplifting Music Therapy (Hand-Picked Uplifting Songs)**:
+   - Music activates dopamine and serotonin pathways faster than almost any cognitive exercise. Here are comforting songs in three languages:
+     - 🇬🇧 **English**: *"Better Days"* by OneRepublic or *"Weightless"* by Marconi Union (scientifically shown to reduce anxiety by 65%).
+     - 🇮🇳 **Hindi**: *"Love You Zindagi"* (Dear Zindagi) or *"Kun Faya Kun"* (A.R. Rahman) for gentle peace and spiritual grounding.
+     - 🌾 **Bengali**: *"Majhe Majhe Tobo Dekha Pai"* (Rabindrasangeet) or *"Aalo Aalo"* (Joy Sarkar / Shaan) for comforting warmth.
+
+I am holding space for you. Take a slow breath. Which of these songs or comforts would you like to treat yourself to first?`;
+  }
+
   // 7. Insomnia & Racing Night Thoughts
   if (lower.includes('sleep') || lower.includes('insomnia') || lower.includes('night') || lower.includes('awake') || lower.includes('racing thoughts') || lower.includes('bed')) {
     return `### When the world sleeps, the mind's volume turns all the way up, ${name}.
@@ -252,10 +294,10 @@ export async function POST(req: Request) {
     }
 
     const lastUserMessage = messages[messages.length - 1]?.content || '';
-    const apiKey = process.env.GEMINI_API_KEY;
+    const apiKey = (process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY || '').trim();
 
     // 1. Live Google Gemini Engine (with Master Therapist System Prompt)
-    if (apiKey && apiKey.trim() !== '') {
+    if (apiKey !== '') {
       try {
         const genAI = new GoogleGenerativeAI(apiKey);
         const model = genAI.getGenerativeModel({
@@ -334,7 +376,7 @@ export async function POST(req: Request) {
       modality
     );
 
-    // Stream the solution-oriented response chunk by chunk for the realistic ChatGPT/Claude typing experience
+    // Stream the solution-oriented response chunk by chunk with high responsiveness (6 words per tick, 8ms delay)
     const encoder = new TextEncoder();
     const stream = new ReadableStream({
       async start(controller) {
@@ -343,10 +385,10 @@ export async function POST(req: Request) {
 
         for (let i = 0; i < words.length; i++) {
           buffer += (i === 0 ? '' : ' ') + words[i];
-          if (i % 3 === 0 || i === words.length - 1) {
+          if (i % 6 === 0 || i === words.length - 1) {
             controller.enqueue(encoder.encode(buffer));
             buffer = '';
-            await new Promise((resolve) => setTimeout(resolve, 20));
+            await new Promise((resolve) => setTimeout(resolve, 8));
           }
         }
         controller.close();

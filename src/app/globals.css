@@ -2,7 +2,7 @@
 
 :root {
   color-scheme: light !important;
-  --background: #ffffff;
+  --background: #F2F8F5;
   --foreground: #182430;
 }
 
@@ -24,13 +24,13 @@
 
 html {
   color-scheme: light !important;
-  background-color: #ffffff !important;
+  background-color: #F2F8F5 !important;
   color: #182430 !important;
 }
 
 body {
   color-scheme: light !important;
-  background-color: #ffffff !important;
+  background-color: #F2F8F5 !important;
   color: #182430 !important;
   font-family: var(--font-sans);
 }
@@ -39,7 +39,7 @@ body {
 @media (prefers-color-scheme: dark) {
   :root, html, body {
     color-scheme: light !important;
-    background-color: #ffffff !important;
+    background-color: #F2F8F5 !important;
     color: #182430 !important;
   }
 }

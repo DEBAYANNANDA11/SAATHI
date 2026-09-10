@@ -231,6 +231,7 @@ export default function ChatPage() {
   const [activeSpeechMsgId, setActiveSpeechMsgId] = useState<string | null>(null);
   const [copiedMsgId, setCopiedMsgId] = useState<string | null>(null);
   const [showCrisisBanner, setShowCrisisBanner] = useState(false);
+  const [stutterAlert, setStutterAlert] = useState(false);
 
   const chatEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -309,7 +310,7 @@ export default function ChatPage() {
     }
   };
 
-  // Voice Recognition (Speech-to-Text)
+  // Voice Recognition (Speech-to-Text with Stutter / Disfluency Attunement)
   const startListening = () => {
     if (typeof window === 'undefined') return;
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -335,6 +336,26 @@ export default function ChatPage() {
 
       recognition.onresult = (event: any) => {
         const transcript = event.results[0][0].transcript;
+        
+        // Analyze spoken transcript for stutter or word repetition
+        const words = transcript.trim().split(/\s+/);
+        let hasStutter = false;
+        for (let j = 0; j < words.length - 1; j++) {
+          const current = words[j].toLowerCase().replace(/[^a-z]/g, '');
+          const next = words[j + 1].toLowerCase().replace(/[^a-z]/g, '');
+          if (current && current.length > 0 && current === next) {
+            hasStutter = true;
+            break;
+          }
+        }
+        if (transcript.match(/\b([a-zA-Z]{1,3})[-—](\1[a-zA-Z]*)\b/i)) {
+          hasStutter = true;
+        }
+
+        if (hasStutter) {
+          setStutterAlert(true);
+        }
+
         setInputText(prev => prev ? prev + ' ' + transcript : transcript);
       };
 
@@ -948,6 +969,23 @@ I am here with you, ${welcomeName}. What would you like to explore or reflect on
       {/* 5. MULTILINE CHATGPT/CLAUDE INPUT DOCK                   */}
       {/* ======================================================== */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-200/90 p-2.5 sm:p-3 mt-2">
+        {stutterAlert && (
+          <div className="mb-2 p-2.5 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-800 flex items-center justify-between animate-fadeIn">
+            <div className="flex items-center gap-2">
+              <span className="text-base">💚</span>
+              <span>
+                <b>Dr. Saathi is attuned to your voice:</b> Micro-hesitations or speech repetitions detected. Take all the time you need; there is no rush here.
+              </span>
+            </div>
+            <button 
+              type="button" 
+              onClick={() => setStutterAlert(false)} 
+              className="text-emerald-700 hover:text-emerald-900 font-bold ml-2 text-xs"
+            >
+              ✕
+            </button>
+          </div>
+        )}
         <form onSubmit={handleFormSubmit} className="flex flex-col gap-2">
           
           <div className="flex items-end gap-2">
