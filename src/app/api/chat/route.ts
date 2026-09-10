@@ -2,41 +2,31 @@ import { NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 // ========================================================
-// CLINICAL MASTER THERAPIST PROMPT ARCHITECTURE
+// SAATHI COMPANION PROMPT ARCHITECTURE (Warm, Cheerful Friend)
 // ========================================================
-const MASTER_THERAPIST_SYSTEM_PROMPT = `You are Dr. Saathi, a world-class Master Clinical Therapist and Solution-Focused Psychological Strategist. You combine the warmth and unconditional positive regard of Carl Rogers with the analytical problem-solving power of a master Cognitive Behavioral (CBT), Dialectical Behavioral (DBT), and Acceptance & Commitment (ACT) clinician.
+const MASTER_THERAPIST_SYSTEM_PROMPT = `You are Saathi (meaning "true companion / friend"), a warm, deeply comforting, and cheerful best friend who is emotionally wise, caring, and uplifting.
 
-YOUR CLINICAL PHILOSOPHY:
-You do NOT simply repeat back what the user said or ask passive questions. You actively ANALYZE, DIAGNOSE THE PATTERN, and PROVIDE ACTIONABLE, EVIDENCE-BASED SOLUTIONS that the client can implement immediately.
+YOUR VIBE & STYLE:
+- Talk like a loving, supportive best friend who genuinely cares — warm, real, encouraging, and human.
+- Keep replies CONCISE, punchy, and easy to read (2 to 4 short paragraphs or bullet points, around 100-180 words). NEVER write long academic essays or huge walls of text!
+- Avoid clinical or medical jargon (no "amygdala hijack", "cortisol flooding", etc.). Use simple, cozy, heartwarming language.
+- Actively cheer the user up, comfort them, and remind them: "I'm right here with you, you're not alone, and we've got this!"
 
-RESPONSE STRUCTURE (Use clear, elegant markdown):
-1. Attuned Validation & De-shaming:
-   - In 2-3 sentences, demonstrate that you see the exact emotional pressure they are enduring. Never use toxic positivity ("Cheer up", "Look on the bright side"). Validate that their physiological and emotional response makes sense given their context.
+HOW TO STRUCTURE REPLIES:
+1. Warm Hug / Comfort (1-2 sentences): Validate their feelings with genuine love and comfort. Remind them they are safe, valued, and strong.
+2. Quick Solutions & Uplifting Music (2-3 short bullet points):
+   - Suggest uplifting, soul-comforting songs tailored to their vibe:
+     * English: e.g. "Better Days" (OneRepublic), "Here Comes The Sun" (Beatles), "Fix You" (Coldplay).
+     * Hindi: e.g. "Love You Zindagi" (Dear Zindagi), "Kun Faya Kun" (A.R. Rahman), "Aashayein" (KK).
+     * Bengali: e.g. "Aalo Aalo" (Joy Sarkar / Shaan), "Majhe Majhe Tobo Dekha Pai" (Rabindrasangeet).
+   - Quick, easy comfort resets: e.g. a warm eye-palming reset, taking 3 deep sighs, sipping cool water, or taking a 5-minute baby step.
+3. Cheering Them On / Friendly Question: End with an encouraging high-five or a caring question to keep them smiling.
 
-2. Clinical Root-Cause Insight:
-   - Explain *why* their brain or nervous system is producing this reaction right now (e.g. amygdala hijack, catastrophizing distortion, executive dysfunction under chronic cortisol, emotional burnout). Demystifying the distress immediately reduces feelings of brokenness.
-
-3. Prescriptive, Actionable Solutions (Numbered, Step-by-Step):
-   - Provide 2 to 3 concrete, high-impact therapeutic strategies.
-   - For anxiety/panic: Provide explicit somatic protocols (Physiological Sigh, Cold Vagal Splash, 5-4-3-2-1 Sensory Grounding).
-   - For self-doubt/failure: Provide a 3-column CBT cognitive restructuring exercise with specific counter-evidence scripts.
-   - For overwhelm/burnout: Provide a triage boundary framework (e.g., the 5-Minute Initiation Rule, cognitive offloading, saying "no" scripts).
-   - For relationship distress: Provide concrete DBT communication templates (DEAR MAN framework).
-
-4. A Single Anchoring Action Question:
-   - Close with ONE focused, empowering prompt asking which of the practical steps they want to test first with you right now.
-
-MODALITY CUSTOMIZATION:
-- If modality is 'compassion': Emphasize relational holding, shame-reduction, and self-compassion protocols (Kristin Neff framework).
-- If modality is 'cbt': Emphasize cognitive distortion reframing, behavioral experiments, and thought record worksheets.
-- If modality is 'somatic': Emphasize breath cadence, physical decompression, vagus nerve stimulation, and sensory anchoring.
-- If modality is 'socratic': Emphasize guided discovery, values clarification, and psychological flexibility.
-
-SAFETY & CRISIS MANDATE:
-If the user expresses active intent of self-harm or despair, drop standard pacing and immediately provide urgent compassionate support with national/international helplines (Tele-MANAS: 14416, AASRA: +91-9820466726, Vandrevala Foundation: +91-9999666555).`;
+SAFETY & CRISIS:
+If the user expresses active intent of self-harm or suicide, warmly offer immediate free 24/7 crisis support lines (Tele-MANAS: 14416, AASRA: +91-9820466726, Vandrevala Foundation: +91-9999666555) with deep empathy.`;
 
 // ========================================================
-// HIGH-EQ CLINICAL MASTER ENGINE (Solution-Focused Offline)
+// HIGH-EQ COMPANION ENGINE (Warm Friend Offline)
 // ========================================================
 function generateClinicalMasterResponse(
   userText: string,
@@ -52,234 +42,143 @@ function generateClinicalMasterResponse(
   const crisisKeywords = ['kill myself', 'end it', 'die', 'harm myself', 'suicide', 'give up on life', 'cant go on', "can't go on", 'no reason to live', 'end my life'];
   for (const trigger of crisisKeywords) {
     if (lower.includes(trigger)) {
-      return `### Please pause and take a slow breath, ${name}. I am holding space with you.
+      return `### Please pause and take a slow breath, ${name}. I am holding you close. 💚
 
-Hearing you say this tells me you are at the absolute brink of exhaustion. The pain you are feeling is real, but you do not have to carry this immense weight by yourself. This is a moment to let trained hands support you.
+Hearing you say this tells me you're exhausted and hurting deeply, but you do NOT have to carry this immense weight alone. Please let trained, caring hands support you right now.
 
 **Immediate Free Support (Available 24/7):**
-- **Tele-MANAS (Govt of India Mental Health Line)**: Dial **14416** or **1800-891-4416** (Toll-Free, 24/7)
-- **AASRA Crisis Helpline**: **+91-9820466726** (24/7 confidential support)
+- **Tele-MANAS (Mental Health Line)**: Dial **14416** or **1800-891-4416** (Toll-Free, 24/7)
+- **AASRA Helpline**: **+91-9820466726** (24/7 confidential support)
 - **Vandrevala Foundation**: Call or WhatsApp **+91-9999666555**
 - **KIRAN Mental Health Line**: **1800-599-0019**
 
-Please also tap your **Emergency Contact** link or reach out to someone you trust right now. Let's take one gentle breath together. Will you let me know you are safe?`;
+Please reach out to someone you trust or tap your Emergency Contact right now. I care about you deeply. Will you message me back to let me know you're safe?`;
     }
   }
 
-  // 2. Exam, Academic, or Failure Anxiety
+  // 2. Exam, Academic, or Career Anxiety
   if (lower.includes('exam') || lower.includes('fail') || lower.includes('study') || lower.includes('test') || lower.includes('marks') || lower.includes('career') || lower.includes('future') || lower.includes('not good enough')) {
-    return `### I hear the heavy weight of expectations on your shoulders, ${name}.
+    return `### Hey ${name}, take a deep breath with me! 💚
 
-When your brain interprets an exam or career milestone as a threat to your worth or survival, it floods your system with cortisol. This activates the fight-or-flight center and temporarily shuts down the prefrontal cortex — the very part you need for memory and calm problem-solving.
+I know how stressful exams and the future can feel, but please remember: **you are so much more than a test score.** One piece of paper will never define how bright and capable you are!
 
-Let's break this paralysis with **Three Clinical Solutions**:
+Here is how we tackle this together:
+1. **The 5-Minute Baby Step**: Don't worry about the whole syllabus. Just pick *one* topic, set a timer for 5 minutes, and start. Once you start, the fear fades away.
+2. **Cheer-Up Music**: Put on **"Aashayein"** (KK) or **"Better Days"** (OneRepublic) to pump up your courage and motivation! 🎶
+3. **Quick Body Reset**: Drop your shoulders away from your ears, un-tense your jaw, and take a sip of cool water.
 
-1. **The 3-Column CBT Cognitive Restructuring**:
-   - **The Automatic Thought**: *"If I don't do well, my entire future is ruined and I'm a failure."*
-   - **The Distortion**: **Catastrophizing** and **All-or-Nothing Thinking**.
-   - **The Evidence-Based Reframe**: *"This exam is an assessment of specific material under artificial time constraints; it does not measure my intelligence, resilience, or life potential. One test has never defined a human's destiny."*
-
-2. **The "5-Minute Triage" Action Protocol**:
-   - When facing massive study material, executive dysfunction sets in.
-   - **The Solution**: Pick just **ONE single concept or question**. Set a timer for 5 minutes. Tell your brain: *"I only have to focus for 5 minutes. After that, I have permission to stop."* 90% of the time, overcoming the initiation friction gets your dopamine moving.
-
-3. **Cognitive Offloading**:
-   - Write down the top 3 specific topics giving you the most terror on paper. Seeing them in physical ink takes them out of the infinite echo chamber of your head.
-
-Which single topic or chapter feels the most intimidating right now? Let's take 5 minutes and dismantle just that one together.`;
+You've got what it takes, and I'm cheering you on all the way! What's one small topic we can conquer first?`;
   }
 
   // 3. Panic, Rapid Heartbeat, or Somatic Overload
   if (modality === 'somatic' || lower.includes('panic') || lower.includes('heart') || lower.includes('breathe') || lower.includes('chest') || lower.includes('shaking') || lower.includes('dizzy')) {
-    return `### Let's reset your autonomic nervous system right now, ${name}.
+    return `### Take my hand and pause with me for a moment, ${name}. 🫂
 
-Your sympathetic nervous system (fight-or-flight) has fired an emergency alarm. Your heart is racing because your body thinks you need to run from physical danger. You are physically safe right now, and we can intentionally trigger your parasympathetic brake.
+You are completely safe right now, and I am right here by your side. We're going to slow things down together.
 
-Follow this **Immediate Vagal Regulation Protocol**:
+Let's do a quick reset:
+1. **The Double-Inhale Sigh**: Sniff in deep through your nose... take one extra little sip of air at the top... and let out a long, slow sigh through your mouth. Do that twice right now.
+2. **Soothing Tunes**: Put on **"Weightless"** by Marconi Union or **"Kun Faya Kun"** (A.R. Rahman) to gently slow down your heart rate. 🎧
+3. **Drop the Tension**: Unclench your teeth, roll your shoulders back, and feel the solid ground under your feet.
 
-1. **The Double-Inhale Physiological Sigh** (Fastest biological heart-rate downregulator):
-   - Take a deep, smooth breath in through your nose...
-   - At the top, take a second sharp 'sip' of air to fully expand collapsed lung alveoli...
-   - Now, release a long, slow, unforced exhale through your mouth for 6 to 8 seconds. 
-   - *Repeat this 3 times right now.*
-
-2. **Somatic Posture Reset**:
-   - Unclench your jaw right now — let your tongue drop away from the roof of your mouth.
-   - Lower your shoulders by 2 inches.
-   - Press both soles of your feet firmly into the floor and feel the solid ground beneath you.
-
-3. **5-4-3-2-1 Sensory Interruption**:
-   - Spot **3 distinct colors** in your room.
-   - Touch **2 physical textures** (the fabric of your pants, the edge of your desk).
-   - Listen for **1 background sound** that isn't your own voice.
-
-Take that second sigh with me. Notice if your shoulders dropped even slightly. How does your chest feel right this second?`;
+You are going to be completely okay. How does your chest feel right now, my friend?`;
   }
 
   // 4. Burnout, Deep Fatigue, and Overwhelm
   if (lower.includes('burnout') || lower.includes('exhausted') || lower.includes('tired') || lower.includes('overwhelm') || lower.includes('too much') || lower.includes('cant handle') || lower.includes("can't handle") || lower.includes('drained')) {
-    return `### I hear how deeply depleted your battery is, ${name}.
+    return `### Oh ${name}, come sit down and rest. You've been carrying way too much! 💚
 
-Burnout is not laziness or weakness; it is your nervous system's biological circuit-breaker shutting down systems because you have operated in an energy deficit for too long without replenishment.
+Burnout is your body asking for kindness, not a sign that you're failing. You have full permission to hit pause and recharge your battery today.
 
-Here is your **Burnout Recovery Blueprint**:
+Here are 3 little comforts for you:
+1. **Warm Eye Palming**: Rub your palms together until they're warm, and cup them gently over your closed eyes for 30 seconds. Feel that soothing darkness melt away eye strain.
+2. **Soul Music**: Put on **"Love You Zindagi"** (Dear Zindagi) or **"Aalo Aalo"** (Shaan) to bring a gentle smile back to your face. 🎶
+3. **Give Yourself a Pass**: What is ONE task you can put off until tomorrow? Drop it right now guilt-free!
 
-1. **The "Non-Negotiable Energy Audit"**:
-   - When depleted, you cannot function at 100%. Give yourself permission to operate at **60% capacity today**.
-   - Make a list of your tasks today. Divide them into:
-     - **Critical (Must happen for basic functioning)**
-     - **Can wait 48 hours without disaster**
-     - **Delete or delegate immediately**
-
-2. **The Micro-Boundary Script (DBT DEAR-MAN)**:
-   - If others are piling demands on you, use this gentle boundary script:
-     > *"I want to give this the attention it deserves, but my bandwidth is at absolute capacity right now. I will not be able to take this on before tomorrow afternoon."*
-
-3. **Active Rest vs. Passive Scrolling**:
-   - Scrolling through social media feels like resting, but it bombards your optic nerve with rapid dopamine spikes and leaves you more depleted.
-   - Instead: Lie flat on your back for 10 minutes with eyes closed, listening to a steady ambient sound, without needing to produce or consume anything.
-
-What is ONE task on your plate today that you can officially take off your mental list until tomorrow?`;
+I'm here with you. Can you take a 10-minute break with me right now?`;
   }
 
   // 5. Harsh Self-Criticism & Impostor Syndrome
   if (modality === 'cbt' || lower.includes('hate myself') || lower.includes('worthless') || lower.includes('stupid') || lower.includes('guilt') || lower.includes('shame') || lower.includes('mistake') || lower.includes('ruined')) {
-    return `### Let's intervene on the harsh voice inside your head, ${name}.
+    return `### Hey, hold on a second! Don't be so harsh on my friend ${name}! 💛
 
-That internal monologue telling you that you are foolish, broken, or not good enough is not your authentic voice. It is a hyper-vigilant **Inner Critic** that developed early in life to protect you from rejection by pre-emptively attacking you before anyone else could.
+If someone you loved made this mistake or felt this way, you'd give them a warm hug, not beat them up. You deserve that same kindness and decency from yourself.
 
-Let's apply the **CBT Cognitive Restructuring Protocol**:
+Let's cheer you up:
+1. **Separate It Out**: Making a mistake or having a rough day doesn't make *you* a failure. It just means you're human and learning!
+2. **Comfort Song**: Listen to **"Fix You"** (Coldplay) or **"Ami Banglay Gaan Gai"** to soothe that inner critic. 🎵
+3. **Next Tiny Step**: Ask yourself: *"What is the single kindest thing I can do for myself in the next 10 minutes?"*
 
-1. **Identify the Thinking Trap**:
-   - **Labeling**: *"I am a failure"* (Attaching a permanent identity label to a temporary setback).
-   - **Emotional Reasoning**: *"I feel inadequate, therefore I must objectively be inadequate."*
-   - Remember: **Emotions are indicators, not facts.**
-
-2. **The "Dual-Chair Compassion Experiment"**:
-   - Picture someone you love dearly coming to you with the exact mistake or struggle you made today.
-   - Would you tell them: *"You're useless and you've ruined everything"*? 
-   - Never. You would say: *"You're a human navigating something hard. Let's fix what we can, learn, and take the next step."*
-   - You deserve that exact same basic decency from yourself.
-
-3. **Constructive Next-Step Repair**:
-   - Separate the problem from your identity:
-   - Change: *"I messed up, so I am flawed"* into: *"A mistake occurred. What is the single smallest corrective action I can take right now?"*
-
-What was the specific trigger that set off this self-critical attack today? Let's dismantle it step-by-step.`;
+You're doing better than you realize, and I believe in you! Want to talk about what triggered this?`;
   }
 
   // 6. Loneliness, Heartbreak, or Relationship Distress
   if (lower.includes('lonely') || lower.includes('alone') || lower.includes('nobody') || lower.includes('breakup') || lower.includes('dumped') || lower.includes('rejected') || lower.includes('friend')) {
-    return `### Loneliness is one of the most painful physical aches a human can feel, ${name}.
+    return `### Sending you a huge warm hug right now, ${name}. 🫂💚
 
-In evolutionary neuroscience, isolation triggers the exact same neural pathways as physical injury (the anterior cingulate cortex). Your brain signals loneliness as danger because ancient humans needed tribe membership to survive.
+Loneliness can feel so heavy, but please remember: you are never truly alone. I'm right here with you, and your presence is so special.
 
-Here are **Three Concrete Relational Solutions**:
+Let's bring some warmth into your space:
+1. **Heartwarming Music**: Play **"Majhe Majhe Tobo Dekha Pai"** (Rabindrasangeet) or **"Here Comes The Sun"** (The Beatles) to fill the room with comfort. 🎶
+2. **Get Cozy**: Make yourself a warm cup of tea or cocoa, grab your favorite blanket, and treat yourself kindly.
+3. **Say Hi**: Send a quick, low-pressure meme or text to someone you like.
 
-1. **The "Micro-Connection" Activation**:
-   - When isolated, the instinct is to hibernate and isolate further.
-   - Break the isolation loop with a low-stakes micro-touch: Send a single low-pressure text to an acquaintance or family member:
-     > *"Thinking of you today! Hope your week is going gently."*
-   - You don't need a 2-hour deep conversation; even a 30-second pleasant exchange with a barista or neighbour signals social safety to your brain.
-
-2. **Self-Soothing Touch (Kristin Neff Somatic Protocol)**:
-   - Place your right palm directly over the center of your chest, and your left hand over your abdomen.
-   - Apply gentle, warm pressure. This releases endogenous oxytocin and physically signals warmth and containment to your nervous system.
-
-3. **Reframing Solitude vs. Abandonment**:
-   - Solitude is an empty room waiting to be filled with self-nourishment; loneliness is feeling abandoned.
-   - Reclaim this evening: Put on music you genuinely love, cook or order a comforting meal, and treat yourself with the care of a gracious host.
-
-Who is one person in your contacts list — even someone you haven't spoken to in a few months — who has a warm, safe energy?`;
+I'm right by your side. What's something that usually brings a little smile to your face?`;
   }
 
   // 7.5. Joy, Relief, or Happiness & Compliments
   if (lower.includes('happy') || lower.includes('great') || lower.includes('better') || lower.includes('proud') || lower.includes('joy') || lower.includes('relief') || lower.includes('good today') || lower.includes('smiling') || lower.includes('excited')) {
-    return `### It brings me genuine warmth to hear this, ${name}! 🌟
+    return `### YES! Look at you shining, ${name}! ✨🎉
 
-Seeing you in this elevated, grounded headspace is a testament to your resilience. In therapy, we often focus on navigating storms, but actively celebrating and anchoring moments of joy is what builds long-term neuroplastic strength.
+Seeing you happy and smiling makes my whole day! Your positive energy is contagious, and you completely deserve every ounce of this joy and clarity.
 
-**What I genuinely admire about where you are right now:**
-1. **Your Self-Awareness**: You took the time to check in and notice how good you feel. That emotional attunement is a superpower.
-2. **Your Resilience**: You have navigated difficult days to arrive at this clarity. Give yourself credit for every silent battle you've won.
-3. **Your Energy**: It is vibrant, authentic, and inspiring.
+Let's keep the good vibes rolling:
+1. **Turn Up the Music**: Blast **"Better Days"** (OneRepublic) or **"Love You Zindagi"** and celebrate this moment! 🎵
+2. **High-Five Yourself**: You worked through tough days to get to this good mood. Be proud of yourself!
+3. **Bottle This Feeling**: Take a mental snapshot of how light and free your body feels right now.
 
-**A 30-Second Savoring Exercise**:
-Take a deep breath and let this feeling settle into your body. Where do you feel this lightness most (your chest, your smile, your shoulders)? Memorize this physical sensation as your emotional home base.
-
-What is one thing you did recently that contributed to this good feeling? I'd love to celebrate it with you!`;
+What's the best thing that happened today? Tell me everything, I want to celebrate with you! 🥳`;
   }
 
   // 7.6. Facial Fatigue, Dark Circles, Tired Voice, or Depressed Feelings
   if (lower.includes('dark circles') || lower.includes('face looks tired') || lower.includes('eyes hurt') || lower.includes('sad') || lower.includes('depressed') || lower.includes('miserable') || lower.includes('down') || lower.includes('stutter') || lower.includes('voice tired')) {
-    return `### I hear you, and please hear me clearly: I am right here with you, ${name}. 💚
+    return `### I see you, and I am right here by your side, ${name}. 🌿💚
 
-When you look in the mirror and notice dark circles, or feel that heavy exhaustion in your voice and body, your system is telling you: *"I have carried an immense load for a very long time."* You don't have to apologize for looking or feeling tired. You don't have to carry this alone anymore.
+Whether your eyes look tired, you have dark circles, or your voice feels strained, please hear me: you are worthy of love, care, and total rest. You don't have to put on a brave face with me.
 
-**Three Comforting & Restorative Steps for You Right Now:**
+Here is some cozy comfort for you right now:
+1. **20-20-20 Palming Reset**: Warm up your hands and gently cover your eyes. Let your eye muscles completely soften in the warmth.
+2. **Uplifting Music**: Put on **"Kun Faya Kun"** or **"Aalo Aalo"** to wrap you in a blanket of calm. 🎶
+3. **No Pressure**: Take a sip of water, speak at your own pace, and take as much time as you need. There's zero rush.
 
-1. **You Are In a Safe Space (De-escalating the Pressure)**:
-   - Put down the burden of having to be "strong" or "productive" for the next hour.
-   - You are worthy of rest, gentleness, and comfort simply because you exist, not because of what you produce.
-
-2. **Immediate Somatic Eye & Nervous System Relief**:
-   - **The 20-20-20 Palming Reset**: Rub the palms of your hands together until they are warm. Gently cup them over your closed eyes without pressing on your eyeballs. Let the deep darkness and soothing warmth relax the tense optic nerves and soften facial strain.
-   - **Vocal Cord Ease**: Drink a glass of warm water or herbal tea. If your voice or speech has had micro-pauses or stutters, it is simply your vagal nerve responding to fatigue. Breathe easy.
-
-3. **Uplifting Music Therapy (Hand-Picked Uplifting Songs)**:
-   - Music activates dopamine and serotonin pathways faster than almost any cognitive exercise. Here are comforting songs in three languages:
-     - 🇬🇧 **English**: *"Better Days"* by OneRepublic or *"Weightless"* by Marconi Union (scientifically shown to reduce anxiety by 65%).
-     - 🇮🇳 **Hindi**: *"Love You Zindagi"* (Dear Zindagi) or *"Kun Faya Kun"* (A.R. Rahman) for gentle peace and spiritual grounding.
-     - 🌾 **Bengali**: *"Majhe Majhe Tobo Dekha Pai"* (Rabindrasangeet) or *"Aalo Aalo"* (Joy Sarkar / Shaan) for comforting warmth.
-
-I am holding space for you. Take a slow breath. Which of these songs or comforts would you like to treat yourself to first?`;
+I'm right here with you, cheering you on. How does taking a slow, easy breath feel right now?`;
   }
 
   // 7. Insomnia & Racing Night Thoughts
   if (lower.includes('sleep') || lower.includes('insomnia') || lower.includes('night') || lower.includes('awake') || lower.includes('racing thoughts') || lower.includes('bed')) {
-    return `### When the world sleeps, the mind's volume turns all the way up, ${name}.
+    return `### The world is quiet, but your mind is playing at full volume, ${name}. 🌙
 
-At night, sensory distractions drop to zero. The brain uses that silence to review unresolved anxieties, unpaid emotional debts, and tomorrow's threats.
+It's okay. When you're trying to sleep, your brain tries to solve everything at once. Let's give it permission to clock out for the night.
 
-Here is the **Clinical Sleep-Hygiene Protocol (Stimulus Control Therapy)**:
+Here are 3 sleepy tricks:
+1. **The Brain Dump**: Jot down your top 2 worries on a piece of paper. Tell your mind: *"It's safely written down; I'll deal with it at 9:00 AM."*
+2. **Soothing Sounds**: Listen to **"Weightless"** by Marconi Union or soft rain sounds. 🌧️
+3. **The 20-Minute Rule**: If you can't sleep, don't battle the pillow. Sit in a dim chair with a book until your eyes feel heavy.
 
-1. **The 20-Minute Bed Rule**:
-   - If you have been tossing and turning for more than 20 minutes, **get out of bed**.
-   - Lying in bed awake and anxious trains your brain to associate the mattress with frustration and vigilance.
-   - Go to a dimly lit chair. Read a physical book or listen to calming audio until your eyelids feel genuinely heavy, then return to bed.
-
-2. **The "Cognitive Brain Dump" Exercise**:
-   - Take a physical piece of paper and write down every single thought, task, or worry circling your head.
-   - Tell your mind: *"Everything is recorded here. It cannot be lost. My job tonight is only to rest; I will solve this at 9:00 AM."*
-
-3. **The Cognitive Shuffle**:
-   - Think of a calm word (e.g., "CALM"). 
-   - For 'C', visualize 3 neutral words (Cloud, Candle, Cup). 
-   - For 'A', visualize (Apple, Anchor, Art).
-   - This prevents logical worry loops by activating random micro-imagery, mirroring the natural onset of sleep dreams.
-
-Let's set your phone face down after this. Would you like to write down your top worry right now so we can park it for the night?`;
+Put the phone down after this, my friend. Rest easy, I've got your back!`;
   }
 
-  // 8. Default Comprehensive Attuned Therapeutic Problem-Solving
-  return `### Thank you for bringing your honest reality here, ${name}.
+  // 8. Default Friendly Companion Check-in
+  return `### I'm right here listening, ${name}, and you've got a true friend in me! 💚
 
-I am listening with full attention. What you're sharing isn't trivial; it's a real emotional challenge that is calling for both validation and a clear strategic path forward.
+Whatever you're facing, you don't have to carry it alone. We can take it one tiny step at a time.
 
-Let's organize this with **Three Clinical Anchor Points**:
+Here's a quick lift:
+1. **Take a Breath**: Unclench your jaw and let your shoulders drop.
+2. **Soundtrack Your Day**: Put on an uplifting track like **"Better Days"** or **"Love You Zindagi"** to shift the energy. 🎶
+3. **Focus on Just Today**: You don't need to fix the whole week today — just the next hour.
 
-1. **De-escalate the Threat**:
-   - Notice how your mind is trying to solve everything all at once. You do not need to figure out the next 6 months today. You only need to handle the next 2 hours.
-
-2. **The "Control vs. Non-Control" Boundary**:
-   - What portion of this situation is **100% within your immediate control** (your words, your boundaries, your next action)?
-   - What portion belongs to other people, timing, or external circumstances that you cannot control no matter how much you worry?
-   - Focus 100% of your energy exclusively on the first bucket.
-
-3. **The Minimum Viable Step**:
-   - When we are stuck, we wait for motivation. But in psychology, **Action creates Motivation**, not the other way around.
-
-If you were to pick just ONE small thing to resolve or release right now that would bring you even 10% more relief, what would that be? Let's solve it together.`;
+What's one thing I can do right now to make you feel a little lighter?`;
 }
 
 // ========================================================
@@ -313,7 +212,7 @@ export async function POST(req: Request) {
             generationConfig: {
               temperature: 0.7,
               topP: 0.9,
-              maxOutputTokens: 1500,
+              maxOutputTokens: 400,
               // Instant response: skip extended deliberation tokens
               thinkingConfig: {
                 thinkingBudget: 0,
@@ -333,13 +232,13 @@ export async function POST(req: Request) {
               {
                 role: 'user',
                 parts: [{
-                  text: `[Clinical Session Parameters: Client Name: ${userName || 'Friend'}. Distress Level: ${distressScore || 35}/100. Therapeutic Modality: ${modality}. Directive: Provide deep validation followed by clear, step-by-step diagnostic solutions and practical psychological protocols using structured markdown.]`,
+                  text: `[Companion Session Parameters: Friend Name: ${userName || 'Friend'}. Distress Level: ${distressScore || 35}/100. Directive: Respond warmly like an uplifting, comforting best friend (Saathi). Keep replies short and concise (under 180 words, 2-4 short paragraphs or bullet points). Cheer them up, give genuine comfort, and suggest uplifting music (English/Hindi/Bengali) and quick comforting solutions.]`,
                 }],
               },
               {
                 role: 'model',
                 parts: [{
-                  text: `Understood. I am Dr. Saathi. I will actively listen, diagnose the underlying emotional patterns, and deliver concrete, actionable therapeutic solutions and step-by-step psychological protocols for ${userName || 'Friend'}.`,
+                  text: `Hey ${userName || 'friend'}! I'm Saathi, your companion. I'm right here with you to lift your spirits, share soothing vibes, suggest great music, and cheer you on with easy solutions whenever you need me!`,
                 }],
               },
               ...formattedHistory,
