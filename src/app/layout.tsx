@@ -4,6 +4,7 @@ import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import InteractiveHoverFX from "@/components/InteractiveHoverFX";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -45,6 +46,7 @@ export default function RootLayout({
         style={{ backgroundColor: "#8FCBB0", colorScheme: "light" }}
       >
         <AuthProvider>
+          <InteractiveHoverFX />
           <Navbar />
           <main className="flex-1 flex flex-col w-full relative bg-[#8FCBB0]">
             {children}

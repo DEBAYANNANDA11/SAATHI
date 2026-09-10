@@ -18,8 +18,78 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
+@keyframes floatSlow {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-14px) rotate(2deg); }
+}
+
+@keyframes floatReverse {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(12px) rotate(-2deg); }
+}
+
+@keyframes pulseSoft {
+  0%, 100% { transform: scale(1); opacity: 0.92; }
+  50% { transform: scale(1.06); opacity: 1; }
+}
+
+@keyframes shimmerGlow {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(200%); }
+}
+
+@keyframes soundwaveBar {
+  0%, 100% { height: 6px; }
+  50% { height: 26px; }
+}
+
+@keyframes waveSlow {
+  0%, 100% { transform: scaleY(0.4); }
+  50% { transform: scaleY(1); }
+}
+
 .animate-fadeIn {
   animation: fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-float-slow {
+  animation: floatSlow 7s ease-in-out infinite;
+}
+
+.animate-float-reverse {
+  animation: floatReverse 8.5s ease-in-out infinite;
+}
+
+.animate-pulse-soft {
+  animation: pulseSoft 3s ease-in-out infinite;
+}
+
+.animate-shimmer {
+  animation: shimmerGlow 2.5s infinite;
+}
+
+/* 3D Floating Cursor-Following Card Utility Styles */
+.is-floating-card {
+  will-change: transform, box-shadow;
+  position: relative;
+  z-index: 20 !important;
+}
+
+/* Subtle dynamic cursor-following specular spotlight */
+.is-floating-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: radial-gradient(
+    420px circle at var(--mouse-x, -999px) var(--mouse-y, -999px),
+    rgba(62, 95, 224, 0.05),
+    transparent 65%
+  );
+  opacity: 1;
+  transition: opacity 0.25s ease;
+  z-index: 1;
 }
 
 html {
