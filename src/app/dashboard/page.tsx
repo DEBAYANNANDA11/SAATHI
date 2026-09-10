@@ -520,7 +520,7 @@ export default function UserDashboard() {
             </span>
           </Link>
 
-          {/* De-Stress Arcade */}
+          {/* Relief Arcade */}
           <Link
             href="/arcade"
             className="p-6 bg-gradient-to-br from-white to-emerald-50/40 hover:to-indigo-50/40 border border-emerald-200/80 hover:border-[#3E5FE0]/50 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 group flex flex-col gap-4"
@@ -530,7 +530,7 @@ export default function UserDashboard() {
             </div>
             <div>
               <h4 className="font-poppins font-bold text-base text-[#142E27] group-hover:text-[#3E5FE0] transition-colors flex items-center gap-1.5">
-                De-Stress Arcade <span className="text-[10px] bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded-full font-bold">New</span>
+                Relief Arcade <span className="text-[10px] bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded-full font-bold">New</span>
               </h4>
               <p className="text-xs text-gray-500 mt-1 leading-relaxed">
                 Play interactive mini-games like Flappy Saathi, Bot vs User Pong, Whack-A-Stress, and 15 jokes.

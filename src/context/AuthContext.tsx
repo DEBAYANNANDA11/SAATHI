@@ -126,7 +126,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     if (loading) return;
 
-    const publicRoutes = ['/', '/login', '/signup'];
+    const publicRoutes = ['/', '/login', '/signup', '/detect', '/arcade', '/resources'];
     const isPublicRoute = publicRoutes.includes(pathname);
 
     if (!user && !isPublicRoute) {

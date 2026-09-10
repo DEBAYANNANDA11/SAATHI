@@ -952,8 +952,6 @@ export default function BiometricScanPage() {
     return () => clearInterval(cycle);
   }, [showBreathingWidget, breathingPhase]);
 
-  if (!user || !profile) return null;
-
   return (
     <div className="flex-1 max-w-6xl mx-auto w-full px-4 sm:px-6 py-8 sm:py-10 flex flex-col gap-6">
       

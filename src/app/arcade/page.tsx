@@ -145,7 +145,7 @@ class ArcadeSound {
   }
 }
 
-// 15 Curated Wholesome & Hilarious De-Stress Jokes
+// 15 Curated Wholesome & Hilarious Relief Jokes
 const JOKES_COLLECTION = [
   {
     id: 1,
@@ -239,7 +239,7 @@ const JOKES_COLLECTION = [
   }
 ];
 
-export default function DeStressArcadePage() {
+export default function ReliefArcadePage() {
   const [activeTab, setActiveTab] = useState<'flappy' | 'tictactoe' | 'pong' | 'whack' | 'bubble' | 'jokes'>('flappy');
   const [soundEnabled, setSoundEnabled] = useState(true);
   const soundRef = useRef<ArcadeSound | null>(null);
@@ -268,7 +268,7 @@ export default function DeStressArcadePage() {
           </Link>
           <div>
             <h1 className="font-poppins font-bold text-2xl sm:text-3xl text-[#142E27] flex items-center gap-2.5 flex-wrap">
-              <span>De-Stress Arcade</span>
+              <span>Relief Arcade</span>
               <span className="text-xs px-2.5 py-1 bg-gradient-to-r from-emerald-100 to-indigo-100 text-[#142E27] border border-emerald-200 rounded-full font-semibold flex items-center gap-1">
                 <Gamepad2 className="w-3.5 h-3.5 text-[#3E5FE0]" /> Joy & Distraction Therapy
               </span>

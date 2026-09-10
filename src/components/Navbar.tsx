@@ -52,7 +52,7 @@ export const Navbar: React.FC = () => {
       { href: '/detect', label: 'Biometric Scan', icon: Activity },
       { href: '/chat', label: 'Talk to SAATHI', icon: MessageSquare },
       { href: '/journal', label: 'Journal', icon: BookOpen },
-      { href: '/arcade', label: 'De-Stress Arcade', icon: Gamepad2 },
+      { href: '/arcade', label: 'Relief Arcade', icon: Gamepad2 },
       { href: '/history', label: 'Distress History', icon: Clock },
       { href: '/resources', label: 'Self Help', icon: LifeBuoy },
       { href: '/settings', label: 'Settings', icon: Settings },
