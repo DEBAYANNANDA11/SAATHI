@@ -18,7 +18,8 @@ import {
   Frown,
   Activity,
   PhoneCall,
-  RefreshCw
+  RefreshCw,
+  Gamepad2
 } from 'lucide-react';
 import { CopingSession } from '@/components/CopingSession';
 
@@ -516,6 +517,27 @@ export default function UserDashboard() {
             </div>
             <span className="text-[#3E6B63] text-xs font-semibold flex items-center gap-1 mt-auto">
               Explore library <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
+            </span>
+          </Link>
+
+          {/* De-Stress Arcade */}
+          <Link
+            href="/arcade"
+            className="p-6 bg-gradient-to-br from-white to-emerald-50/40 hover:to-indigo-50/40 border border-emerald-200/80 hover:border-[#3E5FE0]/50 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 group flex flex-col gap-4"
+          >
+            <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-indigo-600 text-white rounded-xl flex items-center justify-center shadow-xs">
+              <Gamepad2 className="w-5 h-5" />
+            </div>
+            <div>
+              <h4 className="font-poppins font-bold text-base text-[#142E27] group-hover:text-[#3E5FE0] transition-colors flex items-center gap-1.5">
+                De-Stress Arcade <span className="text-[10px] bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded-full font-bold">New</span>
+              </h4>
+              <p className="text-xs text-gray-500 mt-1 leading-relaxed">
+                Play interactive mini-games like Flappy Saathi, Bot vs User Pong, Whack-A-Stress, and 15 jokes.
+              </p>
+            </div>
+            <span className="text-[#3E5FE0] text-xs font-semibold flex items-center gap-1 mt-auto">
+              Play arcade <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
             </span>
           </Link>
 

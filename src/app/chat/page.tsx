@@ -717,17 +717,32 @@ Take a slow breath. You can choose a therapeutic focus above, tap a prompt start
     saveSessionsToDisk(updatedSessions, activeSessionId || '');
 
     // 2. Local distress index update (computed synchronously so UI is instantaneous)
+    // 2. Local distress index update based on accurate calibration rules
+    const lowerTrimmed = trimmed.toLowerCase();
     const sentiment = analyzeSentiment(trimmed);
-    let scoreVal = 35;
+    const hasDarkCircles = lowerTrimmed.includes('dark circle') || lowerTrimmed.includes('dark circles');
+    const negativeMatches = negativeLexicon.filter(w => lowerTrimmed.includes(w)).length;
+    const isTiredOrNegative = sentiment < -0.15 || negativeMatches > 0 || lowerTrimmed.includes('tired') || lowerTrimmed.includes('exhausted');
+
+    let scoreVal = currentScore || 32;
     let tier: 'low' | 'moderate' | 'high' = 'low';
 
-    if (warningLexicon.some(w => trimmed.toLowerCase().includes(w))) {
+    if (warningLexicon.some(w => lowerTrimmed.includes(w))) {
       tier = 'high';
-      scoreVal = 88;
+      scoreVal = 92;
       setShowCrisisBanner(true);
-    } else if (sentiment < -0.3) {
+    } else if (isTiredOrNegative) {
+      // User Rule: around 60 stress, plus more if more signs of negativity
+      const extraEscalation = Math.min(35, (negativeMatches - 1) * 7);
+      scoreVal = Math.min(95, 60 + Math.max(0, extraEscalation));
+      tier = scoreVal >= 70 ? 'high' : 'moderate';
+    } else if (hasDarkCircles) {
+      // User Rule: if user has dark circles, at least keep stress level 50
+      scoreVal = Math.max(50, scoreVal);
       tier = 'moderate';
-      scoreVal = 55;
+    } else if (sentiment > 0.2) {
+      scoreVal = Math.max(15, Math.min(35, scoreVal - 8));
+      tier = 'low';
     }
 
     const explanation = tier === 'high' 

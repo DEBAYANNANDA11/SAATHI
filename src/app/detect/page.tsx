@@ -363,8 +363,12 @@ export default function BiometricScanPage() {
               setCaughtKeywords(prev => [newCaught, ...prev.slice(0, 11)]);
 
               // Dynamically adjust and increase the Live Distress Index!
+              // Rule 1: If voice feels tired or negative -> at least 60 around stress
+              // Rule 2: If more signs of negativity in messages and stuff -> more (compounding)
               setLiveDistressIndex(prev => {
-                const nextScore = Math.min(96, Math.max(prev + item.delta, 35));
+                const base = Math.max(prev, 60);
+                const additionalNegativity = Math.min(36, caughtKeywords.length * 6);
+                const nextScore = Math.min(98, base + Math.round(item.delta * 0.4) + additionalNegativity);
                 return nextScore;
               });
 
@@ -597,6 +601,10 @@ export default function BiometricScanPage() {
       // Periodically update dark circle state
       if (frameCount % 60 === 0) {
         setOpticalDarkCirclesSeverity(computedDarkCircleSeverity);
+        // User Rule: if a user has dark circles, at least keep stress level 50
+        if (computedDarkCircleSeverity >= 45) {
+          setLiveDistressIndex(prev => Math.max(prev, 50));
+        }
       }
 
       // ----------------------------------------------------
@@ -632,6 +640,8 @@ export default function BiometricScanPage() {
         // If speaking but energy variance is very low (< 8) and mean volume is low, flag tired vocal affect
         if (mean > 15 && variance < 10) {
           setVocalTirednessDetected(true);
+          // User Rule: if voice feels tired or negative -> around 60 stress
+          setLiveDistressIndex(prev => Math.max(prev, 60));
         }
       }
 
@@ -759,12 +769,31 @@ export default function BiometricScanPage() {
     );
 
     let finalScore = calculatedScore;
+
+    // User Rule 1: If user has dark circles, at least keep stress level 50
+    if (darkCirclesDetected || hasDarkCircleMention) {
+      finalScore = Math.max(50, finalScore);
+    }
+
+    // User Rule 2: If voice feels tired or negative, then 60 around stress
+    const hasTiredOrNegativeVoice = vocalTirednessDetected || sadCues > 0 || caughtKeywords.length > 0;
+    if (hasTiredOrNegativeVoice) {
+      finalScore = Math.max(60, finalScore);
+
+      // User Rule 3: If more signs of negativity in messages and stuff, then more!
+      const totalNegativeCues = sadCues + caughtKeywords.length + (stutterCount > 0 ? 1 : 0);
+      if (totalNegativeCues > 1) {
+        const escalation = Math.min(36, (totalNegativeCues - 1) * 7);
+        finalScore = Math.min(98, Math.max(finalScore, 60 + escalation));
+      }
+    }
+
     if (isMaskedSadness) {
-      finalScore = Math.min(88, Math.max(72, Math.round(calculatedScore * 1.2) + (darkCirclesDetected ? 8 : 4)));
+      finalScore = Math.min(92, Math.max(74, Math.round(finalScore * 1.15) + (darkCirclesDetected ? 8 : 4)));
     } else if (isUserHappy) {
       finalScore = Math.min(28, Math.max(14, Math.round(calculatedScore * 0.4)));
     } else if (caughtKeywords.length > 2 || vocalTirednessDetected) {
-      finalScore = Math.max(liveDistressIndex, Math.min(95, finalScore));
+      finalScore = Math.max(liveDistressIndex, Math.min(96, finalScore));
     }
 
     let tier: 'low' | 'moderate' | 'high' = 'low';
