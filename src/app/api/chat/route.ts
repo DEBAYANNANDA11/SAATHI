@@ -298,72 +298,76 @@ export async function POST(req: Request) {
 
     // 1. Live Google Gemini Engine (with Master Therapist System Prompt)
     if (apiKey !== '') {
-      try {
-        const genAI = new GoogleGenerativeAI(apiKey);
-        const model = genAI.getGenerativeModel({
-          model: 'gemini-1.5-flash',
-          systemInstruction: MASTER_THERAPIST_SYSTEM_PROMPT,
-          generationConfig: {
-            temperature: 0.7,
-            topP: 0.9,
-            maxOutputTokens: 1200,
-          },
-        });
+      const candidateModels = ['gemini-2.5-flash', 'gemini-flash-latest', 'gemini-2.5-pro', 'gemini-1.5-flash'];
+      const genAI = new GoogleGenerativeAI(apiKey);
 
-        // Format history (last 12 turns)
-        const recentMessages = messages.slice(-12);
-        const formattedHistory = recentMessages.slice(0, -1).map((msg: any) => ({
-          role: msg.role === 'user' ? 'user' : 'model',
-          parts: [{ text: msg.content }],
-        }));
-
-        const chatSession = model.startChat({
-          history: [
-            {
-              role: 'user',
-              parts: [{
-                text: `[Clinical Session Parameters: Client Name: ${userName || 'Friend'}. Distress Level: ${distressScore || 35}/100. Therapeutic Modality: ${modality}. Directive: Provide deep validation followed by clear, step-by-step diagnostic solutions and practical psychological protocols using structured markdown.]`,
-              }],
+      for (const modelName of candidateModels) {
+        try {
+          const model = genAI.getGenerativeModel({
+            model: modelName,
+            systemInstruction: MASTER_THERAPIST_SYSTEM_PROMPT,
+            generationConfig: {
+              temperature: 0.7,
+              topP: 0.9,
+              maxOutputTokens: 1500,
             },
-            {
-              role: 'model',
-              parts: [{
-                text: `Understood. I am Dr. Saathi. I will actively listen, diagnose the underlying emotional patterns, and deliver concrete, actionable therapeutic solutions and step-by-step psychological protocols for ${userName || 'Friend'}.`,
-              }],
-            },
-            ...formattedHistory,
-          ],
-        });
+          });
 
-        const resultStream = await chatSession.sendMessageStream(lastUserMessage);
+          // Format history (last 12 turns)
+          const recentMessages = messages.slice(-12);
+          const formattedHistory = recentMessages.slice(0, -1).map((msg: any) => ({
+            role: msg.role === 'user' ? 'user' : 'model',
+            parts: [{ text: msg.content }],
+          }));
 
-        const encoder = new TextEncoder();
-        const stream = new ReadableStream({
-          async start(controller) {
-            try {
-              for await (const chunk of resultStream.stream) {
-                const chunkText = chunk.text();
-                if (chunkText) {
-                  controller.enqueue(encoder.encode(chunkText));
+          const chatSession = model.startChat({
+            history: [
+              {
+                role: 'user',
+                parts: [{
+                  text: `[Clinical Session Parameters: Client Name: ${userName || 'Friend'}. Distress Level: ${distressScore || 35}/100. Therapeutic Modality: ${modality}. Directive: Provide deep validation followed by clear, step-by-step diagnostic solutions and practical psychological protocols using structured markdown.]`,
+                }],
+              },
+              {
+                role: 'model',
+                parts: [{
+                  text: `Understood. I am Dr. Saathi. I will actively listen, diagnose the underlying emotional patterns, and deliver concrete, actionable therapeutic solutions and step-by-step psychological protocols for ${userName || 'Friend'}.`,
+                }],
+              },
+              ...formattedHistory,
+            ],
+          });
+
+          const resultStream = await chatSession.sendMessageStream(lastUserMessage);
+
+          const encoder = new TextEncoder();
+          const stream = new ReadableStream({
+            async start(controller) {
+              try {
+                for await (const chunk of resultStream.stream) {
+                  const chunkText = chunk.text();
+                  if (chunkText) {
+                    controller.enqueue(encoder.encode(chunkText));
+                  }
                 }
+                controller.close();
+              } catch (streamErr) {
+                console.error('Gemini stream chunk error:', streamErr);
+                controller.error(streamErr);
               }
-              controller.close();
-            } catch (streamErr) {
-              console.error('Gemini stream chunk error:', streamErr);
-              controller.error(streamErr);
-            }
-          },
-        });
+            },
+          });
 
-        return new Response(stream, {
-          headers: {
-            'Content-Type': 'text/plain; charset=utf-8',
-            'Transfer-Encoding': 'chunked',
-            'Cache-Control': 'no-cache, no-transform',
-          },
-        });
-      } catch (geminiError: any) {
-        console.warn('Gemini stream failed, seamlessly falling back to Solution-Focused Master Engine:', geminiError.message);
+          return new Response(stream, {
+            headers: {
+              'Content-Type': 'text/plain; charset=utf-8',
+              'Transfer-Encoding': 'chunked',
+              'Cache-Control': 'no-cache, no-transform',
+            },
+          });
+        } catch (modelErr: any) {
+          console.warn(`Model ${modelName} failed, trying next candidate:`, modelErr?.message || modelErr);
+        }
       }
     }
 
