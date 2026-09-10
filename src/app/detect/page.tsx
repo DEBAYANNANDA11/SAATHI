@@ -720,19 +720,19 @@ export default function BiometricScanPage() {
   }, [showBreathingWidget, breathingPhase]);
 
   return (
-    <div className="flex-1 max-w-6xl mx-auto w-full px-6 py-10 flex flex-col gap-8 bg-[#F2F8F5]">
+    <div className="flex-1 max-w-6xl mx-auto w-full px-6 py-10 flex flex-col gap-8">
       
       {/* Header */}
       <div className="flex items-center gap-3">
-        <Link href="/dashboard" className="p-2 bg-white hover:bg-gray-100 rounded-xl text-gray-500 hover:text-[#3E6B63] transition-colors shadow-sm border border-gray-100">
+        <Link href="/dashboard" className="p-2 bg-white hover:bg-gray-100 rounded-xl text-gray-500 hover:text-[#142E27] transition-colors shadow-sm border border-gray-100">
           <ArrowLeft className="w-5 h-5" />
         </Link>
         <div>
-          <h1 className="font-poppins font-bold text-3xl text-[#3E6B63] flex items-center gap-3">
+          <h1 className="font-poppins font-bold text-3xl text-[#142E27] flex items-center gap-3">
             <span>Biometric Distress & Emotion Scan</span>
-            <span className="text-xs px-2.5 py-1 bg-[#8FCBB0]/20 text-[#3E6B63] rounded-full font-semibold">AI Multimodal</span>
+            <span className="text-xs px-2.5 py-1 bg-white/70 text-[#142E27] rounded-full font-semibold shadow-xs">AI Multimodal</span>
           </h1>
-          <p className="text-gray-600 text-sm mt-1">
+          <p className="text-[#1E4339] text-sm mt-1 font-medium">
             Real-time camera fatigue & dark-circle analysis, unique voice pitch isolation, stutter detection, and keystroke dynamics.
           </p>
         </div>

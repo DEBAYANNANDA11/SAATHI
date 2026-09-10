@@ -19,20 +19,20 @@ export default function LandingPage() {
   const { user } = useAuth();
 
   return (
-    <div className="flex-1 flex flex-col bg-gradient-to-b from-[#EEF1FB] via-white to-[#EEF1FB]/40">
+    <div className="flex-1 flex flex-col bg-[#8FCBB0]">
       {/* Hero Section */}
       <section className="max-w-6xl mx-auto px-6 pt-16 pb-20 grid md:grid-cols-2 gap-12 items-center">
         <div className="flex flex-col gap-6 text-center md:text-left">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 self-center md:self-start bg-[#8FCBB0]/25 rounded-full text-sm font-semibold text-[#3E6B63]">
-            <Brain className="w-4 h-4 animate-pulse" />
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 self-center md:self-start bg-white/75 rounded-full text-sm font-semibold text-[#142E27] shadow-xs">
+            <Brain className="w-4 h-4 text-[#3E6B63] animate-pulse" />
             <span>Smart India Hackathon 2026 Submission &bull; PS 94</span>
           </div>
           
-          <h1 className="font-poppins font-bold text-4xl sm:text-5xl lg:text-6xl text-[#3E6B63] leading-tight">
+          <h1 className="font-poppins font-bold text-4xl sm:text-5xl lg:text-6xl text-[#142E27] leading-tight">
             Your silent companion for <span className="text-[#3E5FE0]">emotional well-being</span>
           </h1>
           
-          <p className="text-gray-600 text-lg leading-relaxed max-w-xl">
+          <p className="text-[#1E4339] text-lg leading-relaxed max-w-xl font-medium">
             SAATHI combines responsive conversational AI with subtle typing and sentiment analytics to detect early signs of mental distress, connecting you to support when it matters most.
           </p>
 

@@ -97,8 +97,8 @@ export default function HistoryPage() {
           <ArrowLeft className="w-5 h-5" />
         </Link>
         <div>
-          <h1 className="font-poppins font-bold text-3xl text-[#3E6B63]">Wellness & Distress History</h1>
-          <p className="text-gray-500 text-sm mt-1">Review your rolling stress level and baseline index metrics over the last 30 days.</p>
+          <h1 className="font-poppins font-bold text-3xl text-[#142E27]">Wellness & Distress History</h1>
+          <p className="text-[#1E4339] text-sm mt-1 font-medium">Review your rolling stress level and baseline index metrics over the last 30 days.</p>
         </div>
       </div>
 

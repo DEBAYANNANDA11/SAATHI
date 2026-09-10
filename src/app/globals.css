@@ -2,8 +2,8 @@
 
 :root {
   color-scheme: light !important;
-  --background: #F2F8F5;
-  --foreground: #182430;
+  --background: #8FCBB0;
+  --foreground: #142E27;
 }
 
 @theme inline {
@@ -24,14 +24,14 @@
 
 html {
   color-scheme: light !important;
-  background-color: #F2F8F5 !important;
-  color: #182430 !important;
+  background-color: #8FCBB0 !important;
+  color: #142E27 !important;
 }
 
 body {
   color-scheme: light !important;
-  background-color: #F2F8F5 !important;
-  color: #182430 !important;
+  background-color: #8FCBB0 !important;
+  color: #142E27 !important;
   font-family: var(--font-sans);
 }
 
@@ -39,7 +39,7 @@ body {
 @media (prefers-color-scheme: dark) {
   :root, html, body {
     color-scheme: light !important;
-    background-color: #F2F8F5 !important;
-    color: #182430 !important;
+    background-color: #8FCBB0 !important;
+    color: #142E27 !important;
   }
 }

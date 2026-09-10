@@ -212,13 +212,13 @@ export default function UserDashboard() {
   };
 
   return (
-    <div className="flex-1 max-w-6xl mx-auto w-full px-6 py-10 flex flex-col gap-8 bg-white">
+    <div className="flex-1 max-w-6xl mx-auto w-full px-6 py-10 flex flex-col gap-8">
       
       {/* Welcome Banner */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="font-poppins font-bold text-3xl text-[#3E6B63]">Hello, {profile.full_name}</h1>
-          <p className="text-gray-500 text-sm mt-1">Here is your daily check-in summary.</p>
+          <h1 className="font-poppins font-bold text-3xl text-[#142E27]">Hello, {profile.full_name}</h1>
+          <p className="text-[#1E4339] text-sm mt-1 font-medium">Here is your daily check-in summary.</p>
         </div>
         
         {/* Support quick link for high distress */}

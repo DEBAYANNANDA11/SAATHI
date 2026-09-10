@@ -119,8 +119,8 @@ export default function SettingsPage() {
           <ArrowLeft className="w-5 h-5" />
         </Link>
         <div>
-          <h1 className="font-poppins font-bold text-3xl text-[#3E6B63]">Preferences & Settings</h1>
-          <p className="text-gray-500 text-sm mt-1">Manage data consent, emergency contacts, and language settings.</p>
+          <h1 className="font-poppins font-bold text-3xl text-[#142E27]">Preferences & Settings</h1>
+          <p className="text-[#1E4339] text-sm mt-1 font-medium">Manage data consent, emergency contacts, and language settings.</p>
         </div>
       </div>
 

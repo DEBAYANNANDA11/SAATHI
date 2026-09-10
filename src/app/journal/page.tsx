@@ -137,8 +137,8 @@ export default function JournalPage() {
           <ArrowLeft className="w-5 h-5" />
         </Link>
         <div>
-          <h1 className="font-poppins font-bold text-3xl text-[#3E6B63]">Private Journal</h1>
-          <p className="text-gray-500 text-sm mt-1">A quiet, personal space to vent or reflect. Completely secure.</p>
+          <h1 className="font-poppins font-bold text-3xl text-[#142E27]">Private Journal</h1>
+          <p className="text-[#1E4339] text-sm mt-1 font-medium">A quiet, personal space to vent or reflect. Completely secure.</p>
         </div>
       </div>
 

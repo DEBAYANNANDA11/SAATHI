@@ -34,19 +34,19 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${poppins.variable} h-full bg-[#F2F8F5] light`}
+      className={`${inter.variable} ${poppins.variable} h-full bg-[#8FCBB0] light`}
       style={{ colorScheme: "light" }}
     >
       <head>
         <meta name="color-scheme" content="light" />
       </head>
       <body 
-        className="min-h-full flex flex-col font-sans text-gray-800 bg-[#F2F8F5]"
-        style={{ backgroundColor: "#F2F8F5", colorScheme: "light" }}
+        className="min-h-full flex flex-col font-sans text-[#142E27] bg-[#8FCBB0]"
+        style={{ backgroundColor: "#8FCBB0", colorScheme: "light" }}
       >
         <AuthProvider>
           <Navbar />
-          <main className="flex-1 flex flex-col w-full relative bg-[#F2F8F5]">
+          <main className="flex-1 flex flex-col w-full relative bg-[#8FCBB0]">
             {children}
           </main>
           <Footer />
