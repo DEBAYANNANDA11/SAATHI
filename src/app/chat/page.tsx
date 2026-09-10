@@ -694,42 +694,52 @@ Take a slow breath. You can choose a therapeutic focus above, tap a prompt start
     setSessions(updatedSessions);
     saveSessionsToDisk(updatedSessions, activeSessionId || '');
 
-    // 2. Local distress index update
+    // 2. Local distress index update (computed synchronously so UI is instantaneous)
     const sentiment = analyzeSentiment(trimmed);
-    await db.createEntry(user.id, 'chat', trimmed, sentiment);
-
-    const entries = await db.getEntries(user.id);
-    const rollingEntries = entries.slice(0, 6);
-    const avgSentiment = rollingEntries.reduce((sum, entry) => sum + Number(entry.sentiment_score), 0) / (rollingEntries.length || 1);
-
-    let scoreVal = Math.round(50 - (avgSentiment * 40));
-    scoreVal = Math.max(0, Math.min(100, scoreVal));
-
+    let scoreVal = 35;
     let tier: 'low' | 'moderate' | 'high' = 'low';
-    if (scoreVal >= 75) tier = 'high';
-    else if (scoreVal >= 40) tier = 'moderate';
 
     if (warningLexicon.some(w => trimmed.toLowerCase().includes(w))) {
       tier = 'high';
-      scoreVal = Math.max(scoreVal, 88);
+      scoreVal = 88;
       setShowCrisisBanner(true);
+    } else if (sentiment < -0.3) {
+      tier = 'moderate';
+      scoreVal = 55;
     }
 
-    let explanation = tier === 'high' 
+    const explanation = tier === 'high' 
       ? 'Elevated distress indicators detected. Gentle care and safety support prioritized.'
       : tier === 'moderate'
         ? 'Mild emotional tension observed. Restorative reflection and grounding recommended.'
         : 'Emotionally stable baseline maintained.';
 
-    const dbScore = await db.createDistressScore(user.id, scoreVal, tier, explanation);
-    setCurrentScore(dbScore.score);
-    setCurrentTier(dbScore.tier);
+    setCurrentScore(scoreVal);
+    setCurrentTier(tier);
 
-    // 3. Stream from /api/chat
+    // Non-blocking database logging (never blocks chat streaming or causes hangs)
+    Promise.all([
+      db.createEntry(user.id, 'chat', trimmed, sentiment),
+      db.createDistressScore(user.id, scoreVal, tier, explanation)
+    ]).catch(dbErr => {
+      console.warn('[Saathi Client] Non-blocking DB log note:', dbErr?.message || dbErr);
+    });
+
+    // 3. Stream from /api/chat with safety timeout and full error handling
     const abortController = new AbortController();
     abortControllerRef.current = abortController;
 
+    // Safety timeout: abort after 25s to prevent infinite spinner
+    const timeoutId = setTimeout(() => {
+      if (abortControllerRef.current) {
+        console.warn('[Saathi Client] Safety timeout reached (25s). Aborting stream...');
+        abortControllerRef.current.abort();
+      }
+    }, 25000);
+
     try {
+      console.log('[Saathi Client] Sending message to /api/chat at', new Date().toISOString(), 'Payload size:', trimmed.length);
+
       const historyPayload = messages
         .filter(m => !m.id.startsWith('welcome'))
         .slice(-10)
@@ -755,12 +765,15 @@ Take a slow breath. You can choose a therapeutic focus above, tap a prompt start
         signal: abortController.signal
       });
 
+      console.log('[Saathi Client] /api/chat returned response status:', response.status);
+
       if (!response.ok) {
-        throw new Error(`API error ${response.status}`);
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `HTTP ${response.status} from chat server`);
       }
 
       if (!response.body) {
-        throw new Error('No response body received.');
+        throw new Error('No response stream received from chat server.');
       }
 
       const reader = response.body.getReader();
@@ -785,6 +798,8 @@ Take a slow breath. You can choose a therapeutic focus above, tap a prompt start
           return msg;
         }));
       }
+
+      console.log('[Saathi Client] Stream completed. Total characters received:', accumulatedText.length);
 
       // Mark complete and persist in session
       const finalMessages = updatedMessages.map(msg => {
@@ -820,35 +835,37 @@ Take a slow breath. You can choose a therapeutic focus above, tap a prompt start
       }
 
     } catch (err: any) {
-      if (err.name !== 'AbortError') {
-        console.error('Chat error:', err);
-        const fallbackText = `I am right here with you, ${profile?.full_name || 'friend'}. Take a slow breath. Could you share that with me once more?`;
-        
-        const fallbackMessages = updatedMessages.map(msg => {
-          if (msg.id === assistantMsgId) {
-            return {
-              ...msg,
-              text: fallbackText,
-              isStreaming: false
-            };
-          }
-          return msg;
-        });
+      console.error('[Saathi Client] Error during chat dispatch:', err);
+      const isTimeout = err?.name === 'AbortError';
+      const fallbackText = isTimeout
+        ? `I am right here with you, ${profile?.full_name || 'friend'}. The connection took a bit longer than expected to formulate a response. Take a slow, grounding breath. Could you try sharing your thought once more?`
+        : `I hear you, ${profile?.full_name || 'friend'}, and I am holding space with you. A momentary connection issue occurred (${err.message || 'Network delay'}). Take a gentle breath. Could you share that with me once more?`;
+      
+      const fallbackMessages = updatedMessages.map(msg => {
+        if (msg.id === assistantMsgId) {
+          return {
+            ...msg,
+            text: fallbackText,
+            isStreaming: false
+          };
+        }
+        return msg;
+      });
 
-        setMessages(fallbackMessages);
-        const finalSessions = sessions.map(sess => {
-          if (sess.id === activeSessionId) {
-            return {
-              ...sess,
-              messages: fallbackMessages
-            };
-          }
-          return sess;
-        });
-        setSessions(finalSessions);
-        saveSessionsToDisk(finalSessions, activeSessionId || '');
-      }
+      setMessages(fallbackMessages);
+      const finalSessions = sessions.map(sess => {
+        if (sess.id === activeSessionId) {
+          return {
+            ...sess,
+            messages: fallbackMessages
+          };
+        }
+        return sess;
+      });
+      setSessions(finalSessions);
+      saveSessionsToDisk(finalSessions, activeSessionId || '');
     } finally {
+      clearTimeout(timeoutId);
       setSending(false);
       abortControllerRef.current = null;
     }

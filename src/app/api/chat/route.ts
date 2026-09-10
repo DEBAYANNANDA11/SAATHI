@@ -296,6 +296,9 @@ export async function POST(req: Request) {
     const lastUserMessage = messages[messages.length - 1]?.content || '';
     const apiKey = (process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY || '').trim();
 
+    console.log('[API /api/chat] Incoming request for client:', userName || 'Friend', '| Distress:', distressScore || 35);
+    console.log('[API /api/chat] Key status:', apiKey ? `Present (length: ${apiKey.length}, prefix: "${apiKey.slice(0, 4)}...")` : 'EMPTY/UNDEFINED (Using offline clinical master engine)');
+
     // 1. Live Google Gemini Engine (with Master Therapist System Prompt)
     if (apiKey !== '') {
       const candidateModels = ['gemini-2.5-flash', 'gemini-flash-latest', 'gemini-2.5-pro', 'gemini-1.5-flash'];
@@ -303,6 +306,7 @@ export async function POST(req: Request) {
 
       for (const modelName of candidateModels) {
         try {
+          console.log(`[API /api/chat] Attempting connection with Gemini model "${modelName}"...`);
           const model = genAI.getGenerativeModel({
             model: modelName,
             systemInstruction: MASTER_THERAPIST_SYSTEM_PROMPT,
@@ -310,7 +314,11 @@ export async function POST(req: Request) {
               temperature: 0.7,
               topP: 0.9,
               maxOutputTokens: 1500,
-            },
+              // Instant response: skip extended deliberation tokens
+              thinkingConfig: {
+                thinkingBudget: 0,
+              },
+            } as any,
           });
 
           // Format history (last 12 turns)
@@ -339,6 +347,7 @@ export async function POST(req: Request) {
           });
 
           const resultStream = await chatSession.sendMessageStream(lastUserMessage);
+          console.log(`[API /api/chat] Successfully opened stream with model "${modelName}". Streaming tokens...`);
 
           const encoder = new TextEncoder();
           const stream = new ReadableStream({
@@ -352,7 +361,7 @@ export async function POST(req: Request) {
                 }
                 controller.close();
               } catch (streamErr) {
-                console.error('Gemini stream chunk error:', streamErr);
+                console.error('[API /api/chat] Gemini stream chunk error:', streamErr);
                 controller.error(streamErr);
               }
             },
@@ -366,10 +375,12 @@ export async function POST(req: Request) {
             },
           });
         } catch (modelErr: any) {
-          console.warn(`Model ${modelName} failed, trying next candidate:`, modelErr?.message || modelErr);
+          console.warn(`[API /api/chat] Model "${modelName}" failed:`, modelErr?.message || modelErr);
         }
       }
     }
+
+    console.log('[API /api/chat] Serving High-EQ Clinical Master Engine fallback...');
 
     // 2. High-EQ Solution-Focused Clinical Master Engine (Local Fallback)
     const masterResponse = generateClinicalMasterResponse(
