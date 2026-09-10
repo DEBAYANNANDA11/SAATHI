@@ -1,0 +1,45 @@
+@import "tailwindcss";
+
+:root {
+  color-scheme: light !important;
+  --background: #ffffff;
+  --foreground: #182430;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-poppins: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+html {
+  color-scheme: light !important;
+  background-color: #ffffff !important;
+  color: #182430 !important;
+}
+
+body {
+  color-scheme: light !important;
+  background-color: #ffffff !important;
+  color: #182430 !important;
+  font-family: var(--font-sans);
+}
+
+/* Force light theme across all devices, browsers, and OS dark modes */
+@media (prefers-color-scheme: dark) {
+  :root, html, body {
+    color-scheme: light !important;
+    background-color: #ffffff !important;
+    color: #182430 !important;
+  }
+}

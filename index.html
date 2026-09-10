@@ -1,0 +1,2731 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SAATHI — Client-Side Mental Health Companion</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <style>
+    /* Premium Color System & Styling Variables */
+    :root {
+      color-scheme: light !important;
+      --primary: #3E5FE0;
+      --primary-glow: rgba(62, 95, 224, 0.15);
+      --primary-hover: #2d4bc7;
+      --accent: #3E6B63;
+      --accent-glow: rgba(62, 107, 99, 0.1);
+      --accent-hover: #2e534d;
+      --bg-light: #ffffff;
+      --bg-card: #ffffff;
+      --text-dark: #182430;
+      --text-muted: #64748b;
+      --border-color: #e6ebf8;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --shadow-sm: 0 2px 8px rgba(24, 36, 48, 0.04);
+      --shadow-md: 0 10px 25px -5px rgba(62, 95, 224, 0.08), 0 8px 16px -6px rgba(62, 95, 224, 0.04);
+      --shadow-lg: 0 20px 40px -15px rgba(24, 36, 48, 0.12);
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 24px;
+      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Core Document Settings */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    html, body {
+      color-scheme: light !important;
+      background-color: #ffffff !important;
+    }
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background-color: #ffffff;
+      color: var(--text-dark);
+      line-height: 1.5;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+    h1, h2, h3, h4, .font-poppins {
+      font-family: 'Poppins', sans-serif;
+    }
+
+    /* App Views Controller */
+    .app-view {
+      display: none;
+      opacity: 0;
+      transform: translateY(12px);
+      transition: var(--transition);
+      flex: 1;
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 24px 16px;
+    }
+    .app-view.active {
+      display: flex;
+      flex-direction: column;
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Navigation Header */
+    header {
+      background-color: var(--bg-card);
+      border-bottom: 1px solid var(--border-color);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      padding: 14px 24px;
+      box-shadow: var(--shadow-sm);
+    }
+    .nav-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 16px;
+    }
+    .logo-container {
+      margin-right: auto;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    .logo-icon {
+      background-color: var(--accent-glow);
+      color: var(--accent);
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 20px;
+      border: 1px dashed var(--accent);
+    }
+    .logo-text {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--accent);
+      letter-spacing: 0.5px;
+    }
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .nav-btn {
+      padding: 10px 16px;
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: var(--transition);
+      border: none;
+    }
+    .nav-btn-link {
+      background: transparent;
+      color: var(--accent);
+    }
+    .nav-btn-link:hover {
+      background-color: var(--accent-glow);
+    }
+    .nav-btn-primary {
+      background-color: var(--primary);
+      color: white;
+      box-shadow: var(--shadow-sm);
+    }
+    .nav-btn-primary:hover {
+      background-color: var(--primary-hover);
+      transform: translateY(-1px);
+    }
+    .nav-btn-outline {
+      background-color: transparent;
+      border: 1px solid var(--border-color);
+      color: var(--text-dark);
+    }
+    .nav-btn-outline:hover {
+      background-color: rgba(24, 36, 48, 0.02);
+    }
+
+    /* Cards System */
+    .card {
+      background-color: var(--bg-card);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-color);
+      box-shadow: var(--shadow-sm);
+      padding: 24px;
+      transition: var(--transition);
+      margin-bottom: 20px;
+    }
+    .card:hover {
+      box-shadow: var(--shadow-md);
+    }
+    .card-title {
+      font-weight: 700;
+      font-size: 18px;
+      color: var(--accent);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Forms Elements */
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 16px;
+    }
+    .form-group label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+    }
+    .input-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    .input-icon {
+      position: absolute;
+      left: 14px;
+      color: var(--text-muted);
+      width: 18px;
+      height: 18px;
+    }
+    .form-input {
+      width: 100%;
+      padding: 12px 16px;
+      background-color: #fafbfe;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      color: var(--text-dark);
+      transition: var(--transition);
+    }
+    .form-input:focus {
+      outline: none;
+      border-color: var(--primary);
+      background-color: white;
+      box-shadow: 0 0 0 3px var(--primary-glow);
+    }
+    .form-input-icon {
+      padding-left: 44px;
+    }
+    .btn-submit {
+      width: 100%;
+      padding: 14px;
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-weight: 600;
+      font-size: 15px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: var(--transition);
+      box-shadow: var(--shadow-sm);
+    }
+    .btn-submit:hover {
+      background-color: var(--primary-hover);
+      box-shadow: var(--shadow-md);
+      transform: translateY(-1px);
+    }
+
+    /* Login / Signup Specific styles */
+    .auth-container {
+      max-width: 440px;
+      width: 100%;
+      margin: 40px auto;
+      text-align: center;
+    }
+    .auth-header h2 {
+      font-size: 26px;
+      font-weight: 800;
+      color: var(--accent);
+    }
+    .auth-header p {
+      color: var(--text-muted);
+      font-size: 14px;
+      margin-top: 4px;
+    }
+    .auth-divider {
+      position: relative;
+      margin: 20px 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .auth-divider::before {
+      content: "";
+      position: absolute;
+      width: 100%;
+      height: 1px;
+      background-color: var(--border-color);
+      left: 0;
+      z-index: 1;
+    }
+    .auth-divider span {
+      background-color: var(--bg-card);
+      padding: 0 12px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      z-index: 2;
+    }
+    .btn-google {
+      width: 100%;
+      padding: 12px;
+      background-color: white;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      font-weight: 600;
+      font-size: 14px;
+      color: var(--text-dark);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      transition: var(--transition);
+    }
+    .btn-google:hover {
+      background-color: #fafbfe;
+    }
+    .dev-login-badge {
+      display: grid;
+      grid-template-cols: repeat(3, 1fr);
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .badge-btn {
+      padding: 10px 6px;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      background-color: #fafbfe;
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: 600;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      transition: var(--transition);
+      color: var(--text-dark);
+    }
+    .badge-btn:hover {
+      background-color: var(--primary-glow);
+      border-color: var(--primary);
+    }
+    .badge-btn.counsellor:hover {
+      background-color: var(--accent-glow);
+      border-color: var(--accent);
+    }
+    .badge-btn.admin:hover {
+      background-color: rgba(168, 85, 247, 0.08);
+      border-color: rgb(168, 85, 247);
+    }
+    .badge-icon {
+      width: 16px;
+      height: 16px;
+    }
+
+    /* Consent Screen Specific Styles */
+    .consent-grid {
+      display: grid;
+      gap: 12px;
+      margin: 16px 0;
+    }
+    .consent-card {
+      display: flex;
+      align-items: start;
+      gap: 12px;
+      padding: 16px;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      background-color: #fafbfe;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    .consent-card:hover {
+      background-color: var(--primary-glow);
+    }
+    .consent-card input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      border-radius: 4px;
+      margin-top: 2px;
+      cursor: pointer;
+    }
+
+    /* Dashboard Layout */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
+    }
+    @media (min-width: 768px) {
+      .dashboard-grid {
+        grid-template-columns: 4fr 3fr;
+      }
+    }
+    .gauge-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      padding: 30px;
+    }
+    .gauge-wrapper {
+      position: relative;
+      width: 180px;
+      height: 180px;
+      margin: 10px 0;
+    }
+    .gauge-svg {
+      transform: rotate(-90deg);
+      width: 100%;
+      height: 100%;
+    }
+    .gauge-bg {
+      fill: none;
+      stroke: #f1f3fa;
+      stroke-width: 10;
+    }
+    .gauge-fill {
+      fill: none;
+      stroke: var(--success);
+      stroke-width: 10;
+      stroke-linecap: round;
+      stroke-dasharray: 440;
+      stroke-dashoffset: 440;
+      transition: stroke-dashoffset 1s ease-out, stroke 1s ease;
+    }
+    .gauge-value-center {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .gauge-number {
+      font-size: 32px;
+      font-weight: 800;
+      line-height: 1;
+    }
+    .gauge-label {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      margin-top: 4px;
+    }
+    .distress-tier-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+      border: 1px solid transparent;
+      margin-top: 10px;
+    }
+    .distress-tier-badge.low {
+      background-color: var(--accent-glow);
+      color: var(--accent);
+      border-color: #8FCBB0;
+    }
+    .distress-tier-badge.moderate {
+      background-color: var(--warning);
+      color: white;
+    }
+    .distress-tier-badge.high {
+      background-color: var(--danger);
+      color: white;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+      70% { transform: scale(1.02); box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
+      100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+    }
+
+    /* Mood selector buttons */
+    .mood-grid {
+      display: grid;
+      grid-template-cols: repeat(7, 1fr);
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .mood-btn {
+      padding: 10px;
+      border: 1px solid var(--border-color);
+      background-color: white;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-size: 18px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      transition: var(--transition);
+    }
+    .mood-btn:hover {
+      background-color: var(--primary-glow);
+      border-color: var(--primary);
+    }
+    .mood-btn.active {
+      background-color: var(--primary);
+      border-color: var(--primary);
+      color: white;
+      transform: scale(1.05);
+    }
+    .mood-btn span {
+      font-size: 9px;
+      font-weight: 600;
+      color: inherit;
+      margin-top: 4px;
+    }
+
+    /* Quick Action grid links */
+    .actions-grid {
+      display: grid;
+      grid-template-cols: repeat(2, 1fr);
+      gap: 12px;
+      margin-top: 14px;
+    }
+    @media (min-width: 640px) {
+      .actions-grid {
+        grid-template-cols: repeat(4, 1fr);
+      }
+    }
+    .action-card {
+      background-color: #fafbfe;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      cursor: pointer;
+      transition: var(--transition);
+      color: var(--text-dark);
+      text-decoration: none;
+    }
+    .action-card:hover {
+      background-color: white;
+      border-color: var(--primary);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+    .action-icon-circle {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background-color: var(--primary-glow);
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 8px;
+    }
+    .action-card.green .action-icon-circle {
+      background-color: var(--accent-glow);
+      color: var(--accent);
+    }
+    .action-card-text {
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    /* Chat Companion Panel */
+    .chat-layout {
+      height: 520px;
+      display: flex;
+      flex-direction: column;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      background-color: white;
+    }
+    .chat-header-bar {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background-color: #fafbfe;
+    }
+    .chat-status-circle {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      background-color: var(--success);
+      border-radius: 50%;
+      margin-right: 6px;
+    }
+    .messages-area {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      background-color: #fafbfe;
+    }
+    .msg-bubble {
+      display: flex;
+      gap: 10px;
+      max-width: 80%;
+      align-items: start;
+    }
+    .msg-bubble.user {
+      align-self: flex-end;
+      flex-direction: row-reverse;
+    }
+    .msg-bubble.saathi {
+      align-self: flex-start;
+    }
+    .msg-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background-color: var(--primary);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 12px;
+      flex-shrink: 0;
+    }
+    .msg-bubble.saathi .msg-avatar {
+      background-color: var(--accent-glow);
+      color: var(--accent);
+      border: 1px solid var(--accent);
+    }
+    .msg-text-card {
+      padding: 12px 16px;
+      border-radius: 16px;
+      font-size: 13.5px;
+      line-height: 1.5;
+      box-shadow: var(--shadow-sm);
+    }
+    .msg-bubble.user .msg-text-card {
+      background-color: var(--primary);
+      color: white;
+      border-top-right-radius: 0;
+    }
+    .msg-bubble.saathi .msg-text-card {
+      background-color: white;
+      color: var(--text-dark);
+      border-top-left-radius: 0;
+      border: 1px solid var(--border-color);
+    }
+    .msg-timestamp {
+      font-size: 9px;
+      color: var(--text-muted);
+      margin-top: 2px;
+      display: block;
+    }
+    .msg-bubble.user .msg-timestamp {
+      text-align: right;
+    }
+    .chat-input-bar {
+      padding: 14px 20px;
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    .chat-input-field {
+      flex: 1;
+      padding: 12px 16px;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      outline: none;
+      transition: var(--transition);
+      color: var(--text-dark);
+    }
+    .chat-input-field:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--primary-glow);
+    }
+    .chat-action-btn {
+      padding: 12px;
+      border-radius: var(--radius-sm);
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: var(--transition);
+    }
+    .btn-voice {
+      background-color: var(--bg-light);
+      color: var(--text-muted);
+      border: 1px solid var(--border-color);
+    }
+    .btn-voice:hover {
+      color: var(--primary);
+      background-color: var(--primary-glow);
+    }
+    .btn-voice.active {
+      background-color: var(--danger);
+      color: white;
+      animation: micPulse 1.5s infinite;
+    }
+    @keyframes micPulse {
+      0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+      70% { transform: scale(1.05); box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
+      100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+    }
+    .btn-send-chat {
+      background-color: var(--primary);
+      color: white;
+    }
+    .btn-send-chat:hover {
+      background-color: var(--primary-hover);
+    }
+
+    /* Biometric Scanner Styles */
+    .scanner-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
+    }
+    @media (min-width: 768px) {
+      .scanner-grid {
+        grid-template-columns: 4fr 3fr;
+      }
+    }
+    .scanner-viewport-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background-color: #111827;
+      border-radius: var(--radius-md);
+      position: relative;
+      height: 320px;
+      overflow: hidden;
+      border: 2px dashed rgba(255, 255, 255, 0.1);
+    }
+    .scanner-webcam-feed {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: none;
+    }
+    .scanner-overlay {
+      position: absolute;
+      inset: 0;
+      border: 3px solid transparent;
+      pointer-events: none;
+      display: none;
+      z-index: 2;
+    }
+    .scanner-overlay.active {
+      display: block;
+      border-color: var(--primary);
+      animation: scannerGlow 2s infinite ease-in-out;
+    }
+    @keyframes scannerGlow {
+      0%, 100% { border-color: rgba(62, 95, 224, 0.3); box-shadow: inset 0 0 20px rgba(62, 95, 224, 0.2); }
+      50% { border-color: rgba(62, 95, 224, 0.8); box-shadow: inset 0 0 40px rgba(62, 95, 224, 0.5); }
+    }
+    .scanner-laser-line {
+      position: absolute;
+      width: 100%;
+      height: 3px;
+      background: linear-gradient(to right, transparent, var(--primary), transparent);
+      box-shadow: 0 0 8px var(--primary);
+      top: 0;
+      display: none;
+      z-index: 3;
+    }
+    .scanner-laser-line.active {
+      display: block;
+      animation: scanLaser 3s infinite linear;
+    }
+    @keyframes scanLaser {
+      0% { top: 0%; }
+      50% { top: 100%; }
+      100% { top: 0%; }
+    }
+    .scanner-placeholder-content {
+      color: white;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      padding: 24px;
+      z-index: 1;
+    }
+    .scanner-placeholder-icon {
+      color: var(--primary);
+      width: 48px;
+      height: 48px;
+      animation: heartbeat 2s infinite ease;
+    }
+    @keyframes heartbeat {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+    }
+    .scanner-bar-container {
+      margin-top: 14px;
+    }
+    .scanner-bar-item {
+      margin-bottom: 12px;
+    }
+    .scanner-bar-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+    .scanner-bar-bg {
+      width: 100%;
+      height: 8px;
+      background-color: var(--border-color);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .scanner-bar-fill {
+      height: 100%;
+      background-color: var(--primary);
+      border-radius: 4px;
+      width: 0%;
+      transition: width 1.5s ease-out;
+    }
+    .scanner-bar-fill.tension { background-color: var(--warning); }
+    .scanner-bar-fill.jitter { background-color: var(--danger); }
+    .scanner-bar-fill.cogload { background-color: var(--primary); }
+
+    /* Breathing Widget */
+    .breathing-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      padding: 30px;
+      background-color: var(--accent-glow);
+      border: 1px dashed var(--accent);
+    }
+    .breathing-circle-wrapper {
+      position: relative;
+      width: 140px;
+      height: 140px;
+      margin: 16px 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .breathing-circle-bg {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background-color: var(--accent);
+      opacity: 0.15;
+      transform: scale(0.8);
+      transition: transform 3s ease-in-out;
+    }
+    .breathing-circle-core {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background-color: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 700;
+      font-size: 20px;
+      z-index: 2;
+    }
+    .breathing-circle-wrapper.inhale .breathing-circle-bg {
+      transform: scale(1.2);
+    }
+    .breathing-circle-wrapper.hold .breathing-circle-bg {
+      transform: scale(1.2);
+    }
+    .breathing-circle-wrapper.exhale .breathing-circle-bg {
+      transform: scale(0.8);
+    }
+
+    /* History & Journal Lists */
+    .entry-history-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .entry-history-card {
+      background-color: white;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .entry-history-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+    .entry-badge {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 12px;
+      text-transform: uppercase;
+    }
+    .entry-badge.chat { background-color: var(--primary-glow); color: var(--primary); }
+    .entry-badge.journal { background-color: var(--accent-glow); color: var(--accent); }
+    .entry-badge.voice { background-color: rgba(168, 85, 247, 0.08); color: rgb(168, 85, 247); }
+    
+    .sentiment-indicator {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .sentiment-indicator.positive { background-color: #ecfdf5; color: #059669; }
+    .sentiment-indicator.neutral { background-color: #f3f4f6; color: #4b5563; }
+    .sentiment-indicator.stress { background-color: #fef2f2; color: #dc2626; }
+
+    /* Admin Statistics Layout */
+    .admin-stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    @media (min-width: 768px) {
+      .admin-stats-grid {
+        grid-template-columns: repeat(4, 1fr);
+      }
+    }
+    .admin-stat-card {
+      background-color: white;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      text-align: center;
+    }
+    .admin-stat-number {
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--primary);
+    }
+    .admin-stat-label {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      margin-top: 4px;
+    }
+
+    /* Settings Page buttons */
+    .setting-lang-grid {
+      display: flex;
+      gap: 10px;
+    }
+    .btn-lang {
+      flex: 1;
+      padding: 10px;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 12px;
+      background-color: white;
+      transition: var(--transition);
+    }
+    .btn-lang.active {
+      border-color: var(--primary);
+      background-color: var(--primary-glow);
+      color: var(--primary);
+    }
+
+    /* Escalation queue */
+    .esc-queue-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .esc-queue-card {
+      background-color: white;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      cursor: pointer;
+      transition: var(--transition);
+      border-left: 4px solid var(--primary);
+    }
+    .esc-queue-card:hover {
+      box-shadow: var(--shadow-sm);
+      transform: translateX(2px);
+    }
+    .esc-queue-card.high { border-left-color: var(--danger); }
+    .esc-queue-card.moderate { border-left-color: var(--warning); }
+    .esc-queue-card.resolved { border-left-color: var(--success); opacity: 0.7; }
+    
+    .esc-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+    .esc-name {
+      font-weight: 700;
+      font-size: 14px;
+      color: var(--text-dark);
+    }
+    .esc-time {
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Global Header Navigation -->
+  <header>
+    <div class="nav-container">
+      <a class="logo-container" onclick="navigate('dashboard')">
+        <div class="logo-icon">S</div>
+        <span class="logo-text">SAATHI</span>
+      </a>
+      <div class="nav-links" id="navLinks">
+        <!-- Dyn. Loaded Buttons -->
+      </div>
+    </div>
+  </header>
+
+  <!-- ==================== VIEW: LOGIN ==================== -->
+  <div id="view-login" class="app-view auth-container">
+    <div class="card">
+      <div class="auth-header">
+        <h2>Welcome to SAATHI</h2>
+        <p>Sign in to check on your mental wellness</p>
+      </div>
+      <form id="loginForm" style="margin-top: 24px;" onsubmit="handleLoginSubmit(event)">
+        <div class="form-group">
+          <label>Email Address</label>
+          <div class="input-wrapper">
+            <i data-lucide="mail" class="input-icon"></i>
+            <input type="email" id="loginEmail" placeholder="you@example.com" class="form-input form-input-icon" required>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <div class="input-wrapper">
+            <i data-lucide="lock" class="input-icon"></i>
+            <input type="password" id="loginPassword" placeholder="••••••••" class="form-input form-input-icon" required>
+          </div>
+        </div>
+        <button type="submit" class="btn-submit" style="margin-top: 10px;">
+          <span>Sign In</span>
+          <i data-lucide="arrow-right" style="width:16px;"></i>
+        </button>
+      </form>
+
+      <div class="auth-divider">
+        <span>Or continue with</span>
+      </div>
+
+      <button type="button" class="btn-google" onclick="handleGoogleLogin()">
+        <svg style="width:18px;height:18px;" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+          <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+          <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" fill="#FBBC05"/>
+          <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+        </svg>
+        <span>Sign in with Google</span>
+      </button>
+
+      <p style="font-size:13.5px;color:var(--text-muted);margin-top: 20px;">
+        Don't have an account? <a onclick="navigate('signup')" style="color:var(--primary);cursor:pointer;font-weight:600;">Create an account</a>
+      </p>
+
+      <div style="margin-top: 30px; border-top: 1px solid var(--border-color); padding-top: 20px;">
+        <span style="font-size: 11px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.8px;">Developer Sandbox Login</span>
+        <div class="dev-login-badge">
+          <button class="badge-btn" onclick="handleQuickLogin('user@saathi.org')">
+            <i data-lucide="user-check" class="badge-icon"></i>
+            <span>Rahul (User)</span>
+          </button>
+          <button class="badge-btn counsellor" onclick="handleQuickLogin('counsellor@saathi.org')">
+            <i data-lucide="user-check" class="badge-icon"></i>
+            <span>Counsellor</span>
+          </button>
+          <button class="badge-btn admin" onclick="handleQuickLogin('admin@saathi.org')">
+            <i data-lucide="user-check" class="badge-icon"></i>
+            <span>Admin Staff</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== VIEW: SIGNUP ==================== -->
+  <div id="view-signup" class="app-view auth-container">
+    <div class="card">
+      <div class="auth-header">
+        <h2>Join SAATHI</h2>
+        <p>Start tracking and nurturing your mental wellbeing</p>
+      </div>
+      <form id="signupForm" style="margin-top: 24px;" onsubmit="handleSignupSubmit(event)">
+        <div class="form-group">
+          <label>Full Name</label>
+          <div class="input-wrapper">
+            <i data-lucide="user" class="input-icon"></i>
+            <input type="text" id="signupName" placeholder="Rahul Sharma" class="form-input form-input-icon" required>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Email Address</label>
+          <div class="input-wrapper">
+            <i data-lucide="mail" class="input-icon"></i>
+            <input type="email" id="signupEmail" placeholder="you@example.com" class="form-input form-input-icon" required>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <div class="input-wrapper">
+            <i data-lucide="lock" class="input-icon"></i>
+            <input type="password" id="signupPassword" placeholder="Minimum 6 characters" class="form-input form-input-icon" required>
+          </div>
+        </div>
+        <button type="submit" class="btn-submit" style="margin-top: 10px;">
+          <span>Sign Up</span>
+          <i data-lucide="arrow-right" style="width:16px;"></i>
+        </button>
+      </form>
+      <p style="font-size:13.5px;color:var(--text-muted);margin-top: 20px;">
+        Already have an account? <a onclick="navigate('login')" style="color:var(--primary);cursor:pointer;font-weight:600;">Log in instead</a>
+      </p>
+    </div>
+  </div>
+
+  <!-- ==================== VIEW: CONSENT ==================== -->
+  <div id="view-consent" class="app-view" style="max-width:600px;">
+    <div class="card">
+      <h2 class="font-poppins" style="font-size:22px;color:var(--accent);font-weight:700;">Welcome, Setup Privacy Settings</h2>
+      <p style="color:var(--text-muted);font-size:13.5px;margin-top:4px;">Define which metrics SAATHI can sensingly calculate local to this browser.</p>
+      
+      <div class="consent-grid">
+        <label class="consent-card">
+          <input type="checkbox" id="consentText" checked>
+          <div>
+            <span style="font-size:13.5px;font-weight:700;display:block;">Text Sentiment Analysis</span>
+            <span style="font-size:11px;color:var(--text-muted);margin-top:2px;display:block;">Calculate distress index scores based on chat logs and diary checks locally. (Enables dashboard index).</span>
+          </div>
+        </label>
+
+        <label class="consent-card">
+          <input type="checkbox" id="consentVoice">
+          <div>
+            <span style="font-size:13.5px;font-weight:700;display:block;">Voice Frequency Cadence</span>
+            <span style="font-size:11px;color:var(--text-muted);margin-top:2px;display:block;">Process speech metrics locally (jitter, micro-tremors) during local diagnostic scans.</span>
+          </div>
+        </label>
+
+        <label class="consent-card">
+          <input type="checkbox" id="consentVideo">
+          <div>
+            <span style="font-size:13.5px;font-weight:700;display:block;">Face Landmark Analysis</span>
+            <span style="font-size:11px;color:var(--text-muted);margin-top:2px;display:block;">Consent to loading local front-camera landmarks to extract somatic facial micro-tensions.</span>
+          </div>
+        </label>
+      </div>
+
+      <div style="border-top: 1px solid var(--border-color); padding-top: 16px; margin-top: 16px;">
+        <h3 class="font-poppins" style="font-size:15px;color:var(--accent);font-weight:700;margin-bottom:12px;">Emergency Contact (Guardian)</h3>
+        <div class="form-group">
+          <label>Contact Name</label>
+          <input type="text" id="consentContactName" placeholder="e.g. Amit Sharma (Father)" class="form-input">
+        </div>
+        <div class="form-group">
+          <label>Contact Phone</label>
+          <input type="tel" id="consentContactPhone" placeholder="e.g. +91 98765 43210" class="form-input">
+        </div>
+      </div>
+
+      <button onclick="handleConsentSubmit()" class="btn-submit" style="margin-top: 20px;">
+        <span>Complete Onboarding</span>
+        <i data-lucide="arrow-right" style="width:16px;"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- ==================== VIEW: DASHBOARD ==================== -->
+  <div id="view-dashboard" class="app-view">
+    <div style="margin-bottom: 20px;">
+      <h1 style="font-size: 28px; font-weight:800; color:var(--accent);" id="welcomeUserText">Hello Rahul Sharma</h1>
+      <p style="color:var(--text-muted); font-size:14px; margin-top:2px;">Private distress tracking workspace. All data is encrypted locally.</p>
+    </div>
+
+    <div class="dashboard-grid">
+      <!-- Left side: Index Gauges and Quick checks -->
+      <div>
+        <div class="card gauge-card">
+          <h3 class="card-title"><i data-lucide="activity"></i> Distress Index Score</h3>
+          <div class="gauge-wrapper">
+            <svg class="gauge-svg" viewBox="0 0 160 160">
+              <circle class="gauge-bg" cx="80" cy="80" r="70"></circle>
+              <circle class="gauge-fill" id="dashboardGaugeFill" cx="80" cy="80" r="70"></circle>
+            </svg>
+            <div class="gauge-value-center">
+              <span class="gauge-number" id="dashboardGaugeNum">28</span>
+              <span class="gauge-label">Score</span>
+            </div>
+          </div>
+          <span class="distress-tier-badge low" id="dashboardGaugeBadge">
+            <i data-lucide="heart" style="width:14px;fill:currentColor;"></i>
+            <span>Optimal Well-being (Low)</span>
+          </span>
+          <p style="font-size:13.5px;color:var(--text-muted);margin-top:16px;max-width:340px;line-height:1.6;" id="dashboardGaugeDesc">
+            No recent distress logs. Emotion baseline is optimal.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3 class="card-title"><i data-lucide="plus"></i> Quick Mood Check-in</h3>
+          <form onsubmit="handleQuickCheckinSubmit(event)">
+            <div class="form-group">
+              <label>How do you feel right now?</label>
+              <div class="mood-grid">
+                <button type="button" class="mood-btn" onclick="selectMood('happy', this)">😊<span>Happy</span></button>
+                <button type="button" class="mood-btn" onclick="selectMood('peaceful', this)">🕊️<span>Peace</span></button>
+                <button type="button" class="mood-btn" onclick="selectMood('grateful', this)">🙏<span>Grateful</span></button>
+                <button type="button" class="mood-btn" onclick="selectMood('neutral', this)">😐<span>Neutral</span></button>
+                <button type="button" class="mood-btn" onclick="selectMood('tired', this)">🥱<span>Tired</span></button>
+                <button type="button" class="mood-btn" onclick="selectMood('sad', this)">😢<span>Sad</span></button>
+                <button type="button" class="mood-btn" onclick="selectMood('anxious', this)">😰<span>Anxious</span></button>
+              </div>
+            </div>
+            <div class="form-group" style="margin-top: 14px;">
+              <label>Diary Note (Optional)</label>
+              <textarea id="quickCheckinText" placeholder="Venting helps release cognitive load. Speak your mind here..." class="form-input" style="min-height: 80px; resize:none; font-family:inherit;"></textarea>
+            </div>
+            <button type="submit" class="btn-submit">
+              <span>Log Check-in</span>
+              <i data-lucide="check" style="width:16px;"></i>
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Right side: Quick menu and details -->
+      <div>
+        <div class="card" style="padding-bottom: 12px;">
+          <h3 class="card-title"><i data-lucide="layout"></i> Workspace Quick Tools</h3>
+          <div class="actions-grid">
+            <a onclick="navigate('chat')" class="action-card">
+              <div class="action-icon-circle"><i data-lucide="message-square"></i></div>
+              <span class="action-card-text">SAATHI Space</span>
+            </a>
+            <a onclick="navigate('scan')" class="action-card">
+              <div class="action-icon-circle"><i data-lucide="scan"></i></div>
+              <span class="action-card-text">Biometric Scan</span>
+            </a>
+            <a onclick="navigate('journal')" class="action-card green">
+              <div class="action-icon-circle"><i data-lucide="book-open"></i></div>
+              <span class="action-card-text">Diary logs</span>
+            </a>
+            <a onclick="navigate('settings')" class="action-card green">
+              <div class="action-icon-circle"><i data-lucide="settings"></i></div>
+              <span class="action-card-text">Preferences</span>
+            </a>
+          </div>
+        </div>
+
+        <div class="card" style="background-color: var(--primary-glow); border-color: rgba(62,95,224,0.15);">
+          <h3 class="card-title" style="color:var(--primary);"><i data-lucide="info"></i> Daily reflection</h3>
+          <p style="font-size: 13.5px; line-height:1.6; color:var(--text-dark); font-style:italic;" id="dailyQuote">
+            "Your emotional well-being matters far more than any score or task. Rest, recover, and remember you don't have to carry the load alone."
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== VIEW: CHAT ==================== -->
+  <div id="view-chat" class="app-view">
+    <div style="margin-bottom: 20px; display:flex; align-items:center; gap:12px;">
+      <button onclick="navigate('dashboard')" class="nav-btn nav-btn-outline"><i data-lucide="arrow-left" style="width:16px;"></i></button>
+      <div>
+        <h1 style="font-size: 24px; font-weight:800; color:var(--accent);">SAATHI Space</h1>
+        <p style="color:var(--text-muted); font-size:13.5px; margin-top:2px;">Dynamic AI companion check-in. Audio options available.</p>
+      </div>
+    </div>
+
+    <div class="chat-layout">
+      <div class="chat-header-bar">
+        <div style="display:flex; align-items:center;">
+          <span class="chat-status-circle"></span>
+          <span style="font-size: 13.5px; font-weight:700; color:var(--accent);">Online Companion</span>
+        </div>
+        <button id="btnVoiceToggle" class="nav-btn nav-btn-outline" style="font-size: 12px;" onclick="toggleVoiceOutput()">
+          <i data-lucide="volume-2" style="width:16px;"></i>
+          <span id="voiceToggleText">Voice Muted</span>
+        </button>
+      </div>
+      
+      <div class="messages-area" id="chatMessagesArea">
+        <!-- Dynamic Chat logs -->
+      </div>
+
+      <form id="chatForm" onsubmit="handleSendChatMessage(event)">
+        <div class="chat-input-bar">
+          <button type="button" id="btnMic" class="chat-action-btn btn-voice" onclick="toggleSpeechRecognition()">
+            <i data-lucide="mic" style="width:20px;"></i>
+          </button>
+          <input type="text" id="chatInputText" placeholder="Type your check-in response here..." class="chat-input-field">
+          <button type="submit" class="chat-action-btn btn-send-chat">
+            <i data-lucide="send" style="width:20px;"></i>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==================== VIEW: BIOMETRIC SCAN ==================== -->
+  <div id="view-scan" class="app-view">
+    <div style="margin-bottom: 20px; display:flex; align-items:center; gap:12px;">
+      <button onclick="navigate('dashboard')" class="nav-btn nav-btn-outline"><i data-lucide="arrow-left" style="width:16px;"></i></button>
+      <div>
+        <h1 style="font-size: 24px; font-weight:800; color:var(--accent);">Biometric Scan Simulator</h1>
+        <p style="color:var(--text-muted); font-size:13.5px; margin-top:2px;">Evaluates tension and jitter levels using local sensor outputs.</p>
+      </div>
+    </div>
+
+    <div class="scanner-grid">
+      <!-- Left block webcam feed -->
+      <div>
+        <div class="scanner-viewport-card" id="scannerViewport">
+          <video class="scanner-webcam-feed" id="scannerVideo" autoplay muted></video>
+          <div class="scanner-overlay" id="scannerOverlay"></div>
+          <div class="scanner-laser-line" id="scannerLaser"></div>
+          
+          <div class="scanner-placeholder-content" id="scannerPlaceholder">
+            <i data-lucide="aperture" class="scanner-placeholder-icon"></i>
+            <span style="font-weight: 700; font-size: 16px;">Camera Feed Offline</span>
+            <span style="font-size:12px;color:#9ca3af;max-width:260px;">Enable camera permission or click Start Diagnostic below to simulate sensor calculations.</span>
+          </div>
+        </div>
+
+        <button onclick="startBiometricScan()" class="btn-submit" id="btnStartScan" style="margin-top: 14px; background-color: var(--accent);">
+          <i data-lucide="play" style="width:16px;"></i>
+          <span>Start Biometric Evaluation</span>
+        </button>
+      </div>
+
+      <!-- Right block: report results & Breathing widget -->
+      <div>
+        <div class="card" id="scanReportCard" style="display: none;">
+          <h3 class="card-title" style="margin-bottom: 6px;"><i data-lucide="file-text"></i> Diagnostic Report</h3>
+          <div class="distress-tier-badge" id="reportTierBadge" style="margin-bottom: 12px; margin-top:0;">
+            <span>Low</span>
+          </div>
+          <p style="font-size:13px; color:var(--text-muted); line-height: 1.6; margin-bottom: 14px;" id="reportDesc">
+            Results will appear here.
+          </p>
+
+          <div class="scanner-bar-container">
+            <div class="scanner-bar-item">
+              <div class="scanner-bar-label"><span>Facial Muscle Tension</span><span id="txtTensionVal">0%</span></div>
+              <div class="scanner-bar-bg"><div class="scanner-bar-fill tension" id="barTension"></div></div>
+            </div>
+            <div class="scanner-bar-item">
+              <div class="scanner-bar-label"><span>Vocal Pitch Jitter</span><span id="txtJitterVal">0%</span></div>
+              <div class="scanner-bar-bg"><div class="scanner-bar-fill jitter" id="barJitter"></div></div>
+            </div>
+            <div class="scanner-bar-item">
+              <div class="scanner-bar-label"><span>Cognitive Load Rate</span><span id="txtCogLoadVal">0%</span></div>
+              <div class="scanner-bar-bg"><div class="scanner-bar-fill cogload" id="barCogLoad"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Breathing recover widget -->
+        <div class="card breathing-card" id="breathingWidget" style="display: none;">
+          <h3 class="card-title" style="color:var(--accent);"><i data-lucide="wind"></i> Smart Recovery breathing</h3>
+          <p style="font-size:12.5px;color:var(--text-muted);max-width:300px;margin-bottom:10px;">Regulate physical tension by matching the core contraction circle.</p>
+          
+          <div class="breathing-circle-wrapper" id="breathingCircleWrap">
+            <div class="breathing-circle-bg"></div>
+            <div class="breathing-circle-core" id="breathingTimer">Inhale</div>
+          </div>
+          <span style="font-size: 13.5px; font-weight:700; color:var(--accent);" id="breathingStatus">Prepare...</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== VIEW: DIARY JOURNAL ==================== -->
+  <div id="view-journal" class="app-view">
+    <div style="margin-bottom: 20px; display:flex; align-items:center; gap:12px;">
+      <button onclick="navigate('dashboard')" class="nav-btn nav-btn-outline"><i data-lucide="arrow-left" style="width:16px;"></i></button>
+      <div>
+        <h1 style="font-size: 24px; font-weight:800; color:var(--accent);">Private Journal</h1>
+        <p style="color:var(--text-muted); font-size:13.5px; margin-top:2px;">Write freely to vent pressure. Encrypted locally.</p>
+      </div>
+    </div>
+
+    <div class="dashboard-grid">
+      <!-- Create entry -->
+      <div class="card">
+        <h3 class="card-title"><i data-lucide="edit-3"></i> Write Entry</h3>
+        <form onsubmit="handleJournalSubmit(event)">
+          <div class="form-group">
+            <label>Current Mood</label>
+            <select id="journalMood" class="form-input">
+              <option value="Neutral">Neutral</option>
+              <option value="Peaceful">Peaceful</option>
+              <option value="Grateful">Grateful</option>
+              <option value="Energized">Energized</option>
+              <option value="Tired">Tired</option>
+              <option value="Sad">Sad</option>
+              <option value="Stressed">Stressed</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>diary log text</label>
+            <textarea id="journalText" placeholder="Start writing here... only you can view these secure archives." class="form-input" style="min-height: 200px; resize:none; font-family:inherit;" required></textarea>
+          </div>
+          <button type="submit" class="btn-submit">
+            <span>Save Entry</span>
+            <i data-lucide="book-open" style="width:16px;"></i>
+          </button>
+        </form>
+      </div>
+
+      <!-- Entry history -->
+      <div>
+        <div class="card" style="min-height: 380px;">
+          <h3 class="card-title"><i data-lucide="clock"></i> Diary Archives</h3>
+          <div class="entry-history-list" id="journalHistoryList">
+            <!-- Dynamic entries logs -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== VIEW: SETTINGS ==================== -->
+  <div id="view-settings" class="app-view" style="max-width: 800px;">
+    <div style="margin-bottom: 20px; display:flex; align-items:center; gap:12px;">
+      <button onclick="navigate('dashboard')" class="nav-btn nav-btn-outline"><i data-lucide="arrow-left" style="width:16px;"></i></button>
+      <div>
+        <h1 style="font-size: 24px; font-weight:800; color:var(--accent);">Preferences & Settings</h1>
+        <p style="color:var(--text-muted); font-size:13.5px; margin-top:2px;">Manage local data preferences and emergency contacts.</p>
+      </div>
+    </div>
+
+    <div class="dashboard-grid">
+      <!-- Left side preferences form -->
+      <div class="card" style="grid-column: span 1;">
+        <h3 class="card-title"><i data-lucide="sliders"></i> App Preferences</h3>
+        <form onsubmit="handleSettingsSave(event)">
+          <div class="form-group">
+            <label>Emergency Contact Name</label>
+            <input type="text" id="settingsContactName" class="form-input">
+          </div>
+          <div class="form-group">
+            <label>Emergency Contact Phone</label>
+            <input type="tel" id="settingsContactPhone" class="form-input">
+          </div>
+          
+          <div class="form-group" style="margin-top: 14px;">
+            <label>Language Preference</label>
+            <div class="setting-lang-grid">
+              <button type="button" class="btn-lang active" id="btnLangEn" onclick="setAppLanguage('en')">English</button>
+              <button type="button" class="btn-lang" id="btnLangHi" onclick="setAppLanguage('hi')">Hindi</button>
+              <button type="button" class="btn-lang" id="btnLangBn" onclick="setAppLanguage('bn')">Bengali</button>
+            </div>
+          </div>
+
+          <button type="submit" class="btn-submit" style="margin-top: 20px;">
+            <span>Save Preferences</span>
+          </button>
+        </form>
+      </div>
+
+      <!-- Right side actions -->
+      <div class="card">
+        <h3 class="card-title"><i data-lucide="shield-alert"></i> Privacy Control panel</h3>
+        <p style="font-size:12.5px;color:var(--text-muted);line-height:1.5;margin-bottom:16px;">
+          SAATHI processes and stores diagnostic data completely inside this browser. You can export or clear your dataset at any time.
+        </p>
+        
+        <button class="nav-btn nav-btn-outline" style="width: 100%; justify-content: center; margin-bottom: 12px; padding: 12px;" onclick="exportMockData()">
+          <i data-lucide="download" style="width:16px;"></i>
+          <span>Export Local Profile JSON</span>
+        </button>
+
+        <button class="nav-btn nav-btn-outline" style="width: 100%; justify-content: center; background-color:rgba(239, 68, 68, 0.05); border-color: rgba(239,68,68,0.2); color:var(--danger); padding:12px;" onclick="purgeMockData()">
+          <i data-lucide="trash-2" style="width:16px;"></i>
+          <span>Purge All Local Records</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== VIEW: COUNSELLOR PANEL ==================== -->
+  <div id="view-counsellor" class="app-view">
+    <div style="margin-bottom: 20px;">
+      <h1 style="font-size: 28px; font-weight:800; color:var(--accent);">Counsellor Support Queue</h1>
+      <p style="color:var(--text-muted); font-size:14px; margin-top:2px;">Monitor escalated student distress flags. Reach out with support.</p>
+    </div>
+
+    <div class="dashboard-grid">
+      <!-- Queue List -->
+      <div class="card">
+        <h3 class="card-title"><i data-lucide="list"></i> Active Escalations</h3>
+        <div class="esc-queue-list" id="escQueueList">
+          <!-- Dyn list -->
+        </div>
+      </div>
+
+      <!-- Outreach message panel -->
+      <div class="card" id="counsellorOutreachCard" style="display: none;">
+        <h3 class="card-title" id="outreachHeader"><i data-lucide="mail"></i> Outreach Outreach</h3>
+        <p style="font-size: 12.5px; color:var(--text-muted); margin-bottom: 14px;" id="outreachDetails">
+          Send outreach support message to Student.
+        </p>
+        <form onsubmit="handleSendOutreach(event)">
+          <div class="form-group">
+            <label>Support Note</label>
+            <textarea id="outreachMessageText" placeholder="Write a supportive, non-clinical outreach. E.g., 'Noticed things have been heavy lately. Reach out if you want to chat...'" class="form-input" style="min-height: 120px; resize:none; font-family:inherit;" required></textarea>
+          </div>
+          <button type="submit" class="btn-submit">
+            <span>Send Support Outreach</span>
+            <i data-lucide="send" style="width:16px;"></i>
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== VIEW: ADMIN PANEL ==================== -->
+  <div id="view-admin" class="app-view">
+    <div style="margin-bottom: 20px;">
+      <h1 style="font-size: 28px; font-weight:800; color:var(--accent);">Administrative Analytics</h1>
+      <p style="color:var(--text-muted); font-size:14px; margin-top:2px;">Overview of student body mental health metrics and system performance.</p>
+    </div>
+
+    <div class="admin-stats-grid">
+      <div class="admin-stat-card">
+        <span class="admin-stat-number" id="adminTotalUsers">2</span>
+        <span class="admin-stat-label">Total Users</span>
+      </div>
+      <div class="admin-stat-card">
+        <span class="admin-stat-number" id="adminActiveUsers">2</span>
+        <span class="admin-stat-label">Active (This Week)</span>
+      </div>
+      <div class="admin-stat-card">
+        <span class="admin-stat-number" id="adminElevatedRisk">50%</span>
+        <span class="admin-stat-label">Tier 2+ (Elevated Distress)</span>
+      </div>
+      <div class="admin-stat-card">
+        <span class="admin-stat-number" id="adminCounsellors">2</span>
+        <span class="admin-stat-label">Active Staff</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 class="card-title"><i data-lucide="bar-chart-2"></i> Escalated Distress Registry</h3>
+      <div class="entry-history-list" id="adminEscalationList">
+        <!-- Dyn registry logs -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Foot-note details -->
+  <footer style="text-align:center; padding: 24px; font-size:12px; color:var(--text-muted); margin-top: auto; border-top: 1px solid var(--border-color); background-color: white;">
+    <span>SAATHI — Mental Well-being sensing ecosystem. Prepared for SIH Sandbox 2026.</span>
+  </footer>
+
+  <!-- ==================== LOCAL STORAGE / APP JS CLIENT SCRIPT ==================== -->
+  <script>
+    // ==========================================
+    // LOCAL STORAGE DATABASE SEED DATA
+    // ==========================================
+    const DEFAULT_PROFILES = [
+      {
+        id: 'user-id-1',
+        email: 'user@saathi.org',
+        full_name: 'Rahul Sharma',
+        role: 'user',
+        language: 'en',
+        consent_text: true,
+        consent_voice: false,
+        consent_video: false,
+        emergency_contact_name: 'Amit Sharma (Father)',
+        emergency_contact_phone: '+91 9876543210',
+        emergency_contact_opt_in: true,
+        created_at: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
+      },
+      {
+        id: 'user-id-2',
+        email: 'priya@saathi.org',
+        full_name: 'Priya Patel',
+        role: 'user',
+        language: 'hi',
+        consent_text: true,
+        consent_voice: false,
+        consent_video: false,
+        emergency_contact_name: 'Rita Patel (Mother)',
+        emergency_contact_phone: '+91 9988776655',
+        emergency_contact_opt_in: false,
+        created_at: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString()
+      },
+      {
+        id: 'counsellor-id-1',
+        email: 'counsellor@saathi.org',
+        full_name: 'Dr. Aditi Rao',
+        role: 'counsellor',
+        language: 'en',
+        consent_text: true,
+        consent_voice: true,
+        consent_video: true,
+        emergency_contact_opt_in: false,
+        created_at: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString()
+      },
+      {
+        id: 'admin-id-1',
+        email: 'admin@saathi.org',
+        full_name: 'Staff Coordinator',
+        role: 'admin',
+        language: 'en',
+        consent_text: true,
+        consent_voice: true,
+        consent_video: true,
+        emergency_contact_opt_in: false,
+        created_at: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString()
+      }
+    ];
+
+    const DEFAULT_SCORES = [
+      {
+        id: 'score-1',
+        user_id: 'user-id-1',
+        score: 28,
+        tier: 'low',
+        explanation: 'No recent distress logs. Emotion baseline is optimal.',
+        computed_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString()
+      },
+      {
+        id: 'score-2',
+        user_id: 'user-id-2',
+        score: 65,
+        tier: 'moderate',
+        explanation: 'Elevated tension detected in typing sequences. Mild work deadlines pressure.',
+        computed_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString()
+      }
+    ];
+
+    const DEFAULT_ESCALATIONS = [
+      {
+        id: 'esc-1',
+        user_id: 'user-id-2',
+        tier: 'moderate',
+        status: 'pending',
+        created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+        updated_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString()
+      }
+    ];
+
+    const DEFAULT_ENTRIES = [
+      {
+        id: 'entry-1',
+        user_id: 'user-id-1',
+        type: 'journal',
+        content: 'Went to the park today. Stressed about exams but feeling relatively peaceful. [Mood: Peaceful]',
+        sentiment_score: 0.4,
+        created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString()
+      },
+      {
+        id: 'entry-2',
+        user_id: 'user-id-2',
+        type: 'journal',
+        content: 'Lots of load assignments. Feeling tired and my head is heavy. [Mood: Stressed]',
+        sentiment_score: -0.45,
+        created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString()
+      }
+    ];
+
+    // Initialize Mock DB in LocalStorage
+    function initDatabase() {
+      if (!localStorage.getItem('saathi_profiles')) {
+        localStorage.setItem('saathi_profiles', JSON.stringify(DEFAULT_PROFILES));
+      }
+      if (!localStorage.getItem('saathi_scores')) {
+        localStorage.setItem('saathi_scores', JSON.stringify(DEFAULT_SCORES));
+      }
+      if (!localStorage.getItem('saathi_escalations')) {
+        localStorage.setItem('saathi_escalations', JSON.stringify(DEFAULT_ESCALATIONS));
+      }
+      if (!localStorage.getItem('saathi_entries')) {
+        localStorage.setItem('saathi_entries', JSON.stringify(DEFAULT_ENTRIES));
+      }
+    }
+
+    // DB Access helpers
+    const db = {
+      getProfiles() { return JSON.parse(localStorage.getItem('saathi_profiles')); },
+      getScores() { return JSON.parse(localStorage.getItem('saathi_scores')); },
+      getEscalations() { return JSON.parse(localStorage.getItem('saathi_escalations')); },
+      getEntries() { return JSON.parse(localStorage.getItem('saathi_entries')); },
+      
+      saveProfiles(data) { localStorage.setItem('saathi_profiles', JSON.stringify(data)); },
+      saveScores(data) { localStorage.setItem('saathi_scores', JSON.stringify(data)); },
+      saveEscalations(data) { localStorage.setItem('saathi_escalations', JSON.stringify(data)); },
+      saveEntries(data) { localStorage.setItem('saathi_entries', JSON.stringify(data)); },
+
+      getProfile(id) { return this.getProfiles().find(p => p.id === id) || null; },
+      updateProfile(id, updates) {
+        const list = this.getProfiles();
+        const idx = list.findIndex(p => p.id === id);
+        if (idx !== -1) {
+          list[idx] = { ...list[idx], ...updates };
+          this.saveProfiles(list);
+          return list[idx];
+        }
+        return null;
+      },
+
+      getDistressScores(userId) {
+        return this.getScores()
+          .filter(s => s.user_id === userId)
+          .sort((a,b) => new Date(a.computed_at) - new Date(b.computed_at));
+      },
+
+      createDistressScore(userId, score, tier, explanation) {
+        const scores = this.getScores();
+        const newScore = {
+          id: 'score-' + Math.random().toString(36).substr(2, 9),
+          user_id: userId,
+          score,
+          tier,
+          explanation,
+          computed_at: new Date().toISOString()
+        };
+        scores.push(newScore);
+        this.saveScores(scores);
+
+        if (tier === 'moderate' || tier === 'high') {
+          this.createEscalation(userId, tier);
+        }
+        return newScore;
+      },
+
+      createEscalation(userId, tier) {
+        const list = this.getEscalations();
+        const existing = list.find(e => e.user_id === userId && e.status === 'pending');
+        if (existing) {
+          existing.tier = tier;
+          existing.updated_at = new Date().toISOString();
+          this.saveEscalations(list);
+          return existing;
+        }
+        const newEsc = {
+          id: 'esc-' + Math.random().toString(36).substr(2, 9),
+          user_id: userId,
+          tier,
+          status: 'pending',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
+        list.push(newEsc);
+        this.saveEscalations(list);
+        return newEsc;
+      },
+
+      createEntry(userId, type, content, sentimentScore) {
+        const entries = this.getEntries();
+        const newEntry = {
+          id: 'entry-' + Math.random().toString(36).substr(2, 9),
+          user_id: userId,
+          type,
+          content,
+          sentiment_score: sentimentScore,
+          created_at: new Date().toISOString()
+        };
+        entries.unshift(newEntry);
+        this.saveEntries(entries);
+        return newEntry;
+      }
+    };
+
+    // ==========================================
+    // STATE MANAGERS
+    // ==========================================
+    let currentUser = null;
+    let selectedMoodVal = null;
+    let speechEnabled = false;
+    let selectedEscObj = null;
+    
+    // Web Speech API interfaces
+    let synth = typeof window !== 'undefined' ? window.speechSynthesis : null;
+    let recognition = null;
+    if (typeof window !== 'undefined') {
+      const SpeechReg = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (SpeechReg) {
+        recognition = new SpeechReg();
+        recognition.continuous = false;
+        recognition.interimResults = false;
+        recognition.lang = 'en-US';
+      }
+    }
+
+    // ==========================================
+    // ROUTING ENGINE
+    // ==========================================
+    const views = ['login', 'signup', 'consent', 'dashboard', 'chat', 'scan', 'journal', 'settings', 'counsellor', 'admin'];
+    
+    function navigate(viewName) {
+      // Clean active view
+      views.forEach(v => {
+        document.getElementById(`view-${v}`).classList.remove('active');
+      });
+
+      // Show requested view
+      const targetView = document.getElementById(`view-${viewName}`);
+      if (targetView) {
+        targetView.classList.add('active');
+      }
+
+      // Render navigation buttons depending on login state
+      renderHeaderNav();
+
+      // Trigger page load events
+      if (viewName === 'dashboard') {
+        loadDashboardData();
+      } else if (viewName === 'chat') {
+        loadChatMessages();
+      } else if (viewName === 'journal') {
+        loadJournalData();
+      } else if (viewName === 'settings') {
+        loadSettingsData();
+      } else if (viewName === 'counsellor') {
+        loadCounsellorData();
+      } else if (viewName === 'admin') {
+        loadAdminData();
+      }
+      
+      // Auto re-scan Lucide tags for dynamically created DOM
+      lucide.createIcons();
+    }
+
+    // ==========================================
+    // NAVIGATION HEADER CONTROLLER
+    // ==========================================
+    function renderHeaderNav() {
+      const navLinks = document.getElementById('navLinks');
+      navLinks.innerHTML = '';
+
+      if (!currentUser) {
+        navLinks.innerHTML = `
+          <button class="nav-btn nav-btn-link" onclick="navigate('login')">Login</button>
+          <button class="nav-btn nav-btn-primary" onclick="navigate('signup')">Sign Up</button>
+        `;
+      } else {
+        // Logged-in links based on role
+        if (currentUser.role === 'user') {
+          navLinks.innerHTML = `
+            <button class="nav-btn nav-btn-link" onclick="navigate('dashboard')"><i data-lucide="layout"></i><span>Dashboard</span></button>
+            <button class="nav-btn nav-btn-link" onclick="navigate('chat')"><i data-lucide="message-square"></i><span>Chat</span></button>
+            <button class="nav-btn nav-btn-link" onclick="navigate('scan')"><i data-lucide="scan"></i><span>Scan</span></button>
+            <button class="nav-btn nav-btn-link" onclick="navigate('journal')"><i data-lucide="book-open"></i><span>Diary</span></button>
+            <button class="nav-btn nav-btn-link" onclick="navigate('settings')"><i data-lucide="settings"></i><span>Settings</span></button>
+          `;
+        } else if (currentUser.role === 'counsellor') {
+          navLinks.innerHTML = `
+            <button class="nav-btn nav-btn-link" onclick="navigate('counsellor')"><i data-lucide="list"></i><span>Queue</span></button>
+            <button class="nav-btn nav-btn-link" onclick="navigate('settings')"><i data-lucide="settings"></i><span>Settings</span></button>
+          `;
+        } else if (currentUser.role === 'admin') {
+          navLinks.innerHTML = `
+            <button class="nav-btn nav-btn-link" onclick="navigate('admin')"><i data-lucide="bar-chart-2"></i><span>Analytics</span></button>
+            <button class="nav-btn nav-btn-link" onclick="navigate('settings')"><i data-lucide="settings"></i><span>Settings</span></button>
+          `;
+        }
+        
+        navLinks.innerHTML += `
+          <button class="nav-btn nav-btn-outline" onclick="handleLogout()" style="color:var(--danger); border-color:rgba(239,68,68,0.2);"><i data-lucide="log-out"></i><span>Sign Out</span></button>
+        `;
+      }
+    }
+
+    // ==========================================
+    // PAGE RENDERERS & EVENT HANDLERS
+    // ==========================================
+
+    // Login handlers
+    function handleLoginSubmit(e) {
+      e.preventDefault();
+      const email = document.getElementById('loginEmail').value;
+      const pass = document.getElementById('loginPassword').value;
+      
+      const matched = db.getProfiles().find(p => p.email === email.toLowerCase().trim());
+      if (matched) {
+        currentUser = matched;
+        handlePostLoginRedirect();
+      } else {
+        alert("Invalid login credentials.");
+      }
+    }
+
+    function handleQuickLogin(email) {
+      const matched = db.getProfiles().find(p => p.email === email);
+      if (matched) {
+        currentUser = matched;
+        handlePostLoginRedirect();
+      }
+    }
+
+    function handleGoogleLogin() {
+      // Simulate Google auth
+      const confirmed = confirm("Sandbox Google Sign-in:\nAllow authentication for test profile 'rahul.sharma@gmail.com'?");
+      if (confirmed) {
+        let matched = db.getProfiles().find(p => p.email === 'user@saathi.org');
+        currentUser = matched;
+        handlePostLoginRedirect();
+      }
+    }
+
+    function handlePostLoginRedirect() {
+      if (currentUser.role === 'user') {
+        if (!currentUser.consent_text) {
+          navigate('consent');
+        } else {
+          navigate('dashboard');
+        }
+      } else if (currentUser.role === 'counsellor') {
+        navigate('counsellor');
+      } else if (currentUser.role === 'admin') {
+        navigate('admin');
+      }
+    }
+
+    function handleSignupSubmit(e) {
+      e.preventDefault();
+      const name = document.getElementById('signupName').value;
+      const email = document.getElementById('signupEmail').value;
+      const pass = document.getElementById('signupPassword').value;
+
+      if (pass.length < 6) {
+        alert("Password must be at least 6 characters.");
+        return;
+      }
+
+      const list = db.getProfiles();
+      if (list.some(p => p.email === email.toLowerCase().trim())) {
+        alert("An account with this email already exists.");
+        return;
+      }
+
+      const newProfile = {
+        id: 'user-' + Math.random().toString(36).substr(2, 9),
+        email: email.toLowerCase().trim(),
+        full_name: name,
+        role: 'user',
+        language: 'en',
+        consent_text: false,
+        consent_voice: false,
+        consent_video: false,
+        emergency_contact_opt_in: false,
+        created_at: new Date().toISOString()
+      };
+
+      list.push(newProfile);
+      db.saveProfiles(list);
+      currentUser = newProfile;
+      navigate('consent');
+    }
+
+    function handleLogout() {
+      currentUser = null;
+      selectedMoodVal = null;
+      selectedEscObj = null;
+      navigate('login');
+    }
+
+    // Consent Submit
+    function handleConsentSubmit() {
+      const consentText = document.getElementById('consentText').checked;
+      const consentVoice = document.getElementById('consentVoice').checked;
+      const consentVideo = document.getElementById('consentVideo').checked;
+      const contactName = document.getElementById('consentContactName').value;
+      const contactPhone = document.getElementById('consentContactPhone').value;
+
+      currentUser.consent_text = consentText;
+      currentUser.consent_voice = consentVoice;
+      currentUser.consent_video = consentVideo;
+      currentUser.emergency_contact_name = contactName;
+      currentUser.emergency_contact_phone = contactPhone;
+      currentUser.emergency_contact_opt_in = !!(contactName && contactPhone);
+
+      db.updateProfile(currentUser.id, currentUser);
+      navigate('dashboard');
+    }
+
+    // Dashboard Data Loader
+    function loadDashboardData() {
+      document.getElementById('welcomeUserText').textContent = `Hello ${currentUser.full_name}`;
+      
+      const scores = db.getDistressScores(currentUser.id);
+      let latestScore = {
+        score: 28,
+        tier: 'low',
+        explanation: 'No recent distress logs. Emotion baseline is optimal.'
+      };
+      
+      if (scores.length > 0) {
+        latestScore = scores[scores.length - 1];
+      }
+
+      // Draw SVG gauge
+      const val = latestScore.score;
+      const offset = 440 - (val / 100) * 440;
+      const fill = document.getElementById('dashboardGaugeFill');
+      fill.style.strokeDashoffset = offset;
+
+      document.getElementById('dashboardGaugeNum').textContent = val;
+      
+      const badge = document.getElementById('dashboardGaugeBadge');
+      const desc = document.getElementById('dashboardGaugeDesc');
+      
+      badge.className = `distress-tier-badge ${latestScore.tier}`;
+      
+      if (latestScore.tier === 'high') {
+        badge.innerHTML = `<i data-lucide="alert-triangle" style="width:14px;fill:currentColor;"></i><span>Elevated Distress (High)</span>`;
+        fill.style.stroke = "#ef4444";
+      } else if (latestScore.tier === 'moderate') {
+        badge.innerHTML = `<i data-lucide="help-circle" style="width:14px;fill:currentColor;"></i><span>Moderate Stress Indicators</span>`;
+        fill.style.stroke = "#f59e0b";
+      } else {
+        badge.innerHTML = `<i data-lucide="heart" style="width:14px;fill:currentColor;"></i><span>Optimal Well-being (Low)</span>`;
+        fill.style.stroke = "#10b981";
+      }
+      
+      desc.textContent = latestScore.explanation;
+      
+      // Load random quote
+      const quotes = [
+        "Your emotional well-being matters far more than any score or task. Rest, recover, and remember you don't have to carry the load alone.",
+        "Take a deep breath. Inhaling is taking in courage; exhaling is letting go of the stress that doesn't belong to you.",
+        "Venting is release. Writing down your feelings is the first step to processing them. Go ahead and write a diary log today.",
+        "You are doing a wonderful job. Even taking five slow counts to breathe is a step toward mental clarity."
+      ];
+      document.getElementById('dailyQuote').textContent = quotes[Math.floor(Math.random() * quotes.length)];
+    }
+
+    // Mood Selector helper
+    function selectMood(mood, element) {
+      const btns = document.querySelectorAll('.mood-btn');
+      btns.forEach(b => b.classList.remove('active'));
+      element.classList.add('active');
+      selectedMoodVal = mood;
+    }
+
+    function handleQuickCheckinSubmit(e) {
+      e.preventDefault();
+      if (!selectedMoodVal) {
+        alert("Please select a mood icon first.");
+        return;
+      }
+
+      const text = document.getElementById('quickCheckinText').value.trim();
+      let sentiment = 0.0;
+      
+      // Quick local sentiment score computation
+      const positiveKeywords = ['happy', 'good', 'great', 'awesome', 'fine', 'better', 'thankful', 'peaceful'];
+      const negativeKeywords = ['sad', 'anxious', 'heavy', 'stressed', 'tired', 'bad', 'hurt', 'lonely', 'worried', 'hopeless', 'depressed'];
+      const lower = text.toLowerCase();
+      
+      let posCount = 0;
+      let negCount = 0;
+      positiveKeywords.forEach(k => { if (lower.includes(k)) posCount++; });
+      negativeKeywords.forEach(k => { if (lower.includes(k)) negCount++; });
+
+      if (selectedMoodVal === 'happy') sentiment += 0.5;
+      if (selectedMoodVal === 'sad') sentiment -= 0.5;
+      if (selectedMoodVal === 'anxious') sentiment -= 0.6;
+      if (selectedMoodVal === 'tired') sentiment -= 0.3;
+
+      if (posCount > negCount) sentiment += 0.3;
+      else if (negCount > posCount) sentiment -= 0.4;
+      
+      sentiment = Math.max(-1.0, Math.min(1.0, sentiment));
+
+      const entryContent = text ? `${text} [Mood: ${selectedMoodVal}]` : `Logged quick mood: ${selectedMoodVal}`;
+      db.createEntry(currentUser.id, 'journal', entryContent, sentiment);
+
+      // Recalculate distress score
+      const entries = db.getEntries().filter(ent => ent.user_id === currentUser.id);
+      const avgSentiment = entries.slice(0, 5).reduce((acc, curr) => acc + Number(curr.sentiment_score), 0) / Math.min(entries.length, 5);
+      
+      let newScoreVal = Math.round(50 - (avgSentiment * 40));
+      newScoreVal = Math.max(0, Math.min(100, newScoreVal));
+
+      let newTier = 'low';
+      if (newScoreVal >= 75) newTier = 'high';
+      else if (newScoreVal >= 40) newTier = 'moderate';
+
+      const explanation = newTier === 'high' 
+        ? 'Distress index elevated due to expressive words and reported mood state.' 
+        : newTier === 'moderate' 
+          ? 'Stress indicators mildly elevated; rest and self-care suggested.'
+          : 'Emotional indicators remain balanced and optimal.';
+
+      db.createDistressScore(currentUser.id, newScoreVal, newTier, explanation);
+      
+      // Reset inputs
+      document.getElementById('quickCheckinText').value = '';
+      const btns = document.querySelectorAll('.mood-btn');
+      btns.forEach(b => b.classList.remove('active'));
+      selectedMoodVal = null;
+
+      loadDashboardData();
+      alert("Check-in logged successfully! Today's index updated.");
+    }
+
+    // ==========================================
+    // CHAT COMPANION CONTROLLER
+    // ==========================================
+    const mockResponses = {
+      positive: [
+        "That sounds wonderful! I'm so glad things are feeling lighter for you today. What else went well?",
+        "Awesome! Carrying this peaceful energy forward is great. How can we make the rest of your week just as bright?",
+        "Beautiful. Recognizing positive baseline moments builds true resilience. I'm listening!"
+      ],
+      neutral: [
+        "Thanks for sharing. Establishing a stable neutral baseline is completely okay. What's on your agenda today?",
+        "I hear you. Maintaining balance is a quiet strength. Tell me a bit more about how you're spending your evening.",
+        "Reflecting on a quiet day helps settle the mind. I'm here if you want to explore any thought further."
+      ],
+      stress: [
+        "It sounds like you're carrying a lot of weight right now. I'm here to listen. You don't have to carry this alone.",
+        "I'm sorry things are feeling so heavy. Remember that academic deadlines are secondary to your well-being. Take a slow count.",
+        "I hear the strain in your description. Venting here is completely safe. Let's try a breathing cycle together to release muscle tension."
+      ]
+    };
+
+    function loadChatMessages() {
+      const area = document.getElementById('chatMessagesArea');
+      area.innerHTML = '';
+
+      // Welcome message from SAATHI
+      const welcomeBubble = document.createElement('div');
+      welcomeBubble.className = 'msg-bubble saathi';
+      welcomeBubble.innerHTML = `
+        <div class="msg-avatar">S</div>
+        <div class="msg-text-card">
+          <span>Hello ${currentUser.full_name}. I am SAATHI, your emotional companion. How are things holding up today? Feel free to write or use the microphone.</span>
+          <span class="msg-timestamp">${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+        </div>
+      `;
+      area.appendChild(welcomeBubble);
+    }
+
+    function toggleVoiceOutput() {
+      speechEnabled = !speechEnabled;
+      const text = document.getElementById('voiceToggleText');
+      const btn = document.getElementById('btnVoiceToggle');
+      if (speechEnabled) {
+        text.textContent = "Voice On";
+        btn.classList.add('nav-btn-primary');
+        btn.classList.remove('nav-btn-outline');
+      } else {
+        text.textContent = "Voice Muted";
+        btn.classList.add('nav-btn-outline');
+        btn.classList.remove('nav-btn-primary');
+        if (synth) synth.cancel();
+      }
+    }
+
+    function speakText(text) {
+      if (!speechEnabled || !synth) return;
+      synth.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = 0.95;
+      utterance.pitch = 1.0;
+      synth.speak(utterance);
+    }
+
+    function toggleSpeechRecognition() {
+      if (!recognition) {
+        alert("Web Speech API is not supported on this browser. Try Chrome.");
+        return;
+      }
+      const btn = document.getElementById('btnMic');
+      if (btn.classList.contains('active')) {
+        recognition.stop();
+      } else {
+        btn.classList.add('active');
+        recognition.start();
+      }
+    }
+
+    if (recognition) {
+      recognition.onend = () => {
+        document.getElementById('btnMic').classList.remove('active');
+      };
+      recognition.onerror = (e) => {
+        console.error("Speech Recognition Error:", e);
+        document.getElementById('btnMic').classList.remove('active');
+      };
+      recognition.onresult = (event) => {
+        const resultText = event.results[0][0].transcript;
+        document.getElementById('chatInputText').value = resultText;
+      };
+    }
+
+    function handleSendChatMessage(e) {
+      e.preventDefault();
+      const input = document.getElementById('chatInputText');
+      const text = input.value.trim();
+      if (!text) return;
+
+      const area = document.getElementById('chatMessagesArea');
+
+      // 1. User message bubble
+      const userBubble = document.createElement('div');
+      userBubble.className = 'msg-bubble user';
+      userBubble.innerHTML = `
+        <div class="msg-avatar">${currentUser.full_name[0].toUpperCase()}</div>
+        <div class="msg-text-card">
+          <span>${text}</span>
+          <span class="msg-timestamp">${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+        </div>
+      `;
+      area.appendChild(userBubble);
+      input.value = '';
+      area.scrollTop = area.scrollHeight;
+
+      // Calculate sentiment
+      let sentiment = 0.0;
+      const lower = text.toLowerCase();
+      const positiveKeywords = ['happy', 'good', 'great', 'awesome', 'fine', 'better', 'thankful', 'peaceful'];
+      const negativeKeywords = ['sad', 'anxious', 'heavy', 'stressed', 'tired', 'bad', 'hurt', 'lonely', 'worried', 'hopeless', 'depressed'];
+      let posCount = 0;
+      let negCount = 0;
+      positiveKeywords.forEach(k => { if (lower.includes(k)) posCount++; });
+      negativeKeywords.forEach(k => { if (lower.includes(k)) negCount++; });
+
+      if (posCount > negCount) sentiment += 0.4;
+      else if (negCount > posCount) sentiment -= 0.5;
+
+      db.createEntry(currentUser.id, 'chat', text, sentiment);
+
+      // SAATHI Typing Simulation
+      setTimeout(() => {
+        let listCategory = 'neutral';
+        if (sentiment > 0.1) listCategory = 'positive';
+        else if (sentiment < -0.1) listCategory = 'stress';
+
+        const replies = mockResponses[listCategory];
+        const replyText = replies[Math.floor(Math.random() * replies.length)];
+
+        const saathiBubble = document.createElement('div');
+        saathiBubble.className = 'msg-bubble saathi';
+        saathiBubble.innerHTML = `
+          <div class="msg-avatar">S</div>
+          <div class="msg-text-card">
+            <span>${replyText}</span>
+            <span class="msg-timestamp">${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+          </div>
+        `;
+        area.appendChild(saathiBubble);
+        area.scrollTop = area.scrollHeight;
+        
+        speakText(replyText);
+      }, 800);
+    }
+
+    // ==========================================
+    // BIOMETRIC SCAN SIMULATOR CONTROLLER
+    // ==========================================
+    let webcamStream = null;
+
+    async function startBiometricScan() {
+      const btn = document.getElementById('btnStartScan');
+      btn.disabled = true;
+      btn.textContent = "Sensing micro-fluctuations (scanning)...";
+      
+      const placeholder = document.getElementById('scannerPlaceholder');
+      const video = document.getElementById('scannerVideo');
+      const overlay = document.getElementById('scannerOverlay');
+      const laser = document.getElementById('scannerLaser');
+      
+      // Try to acquire webcam stream
+      try {
+        webcamStream = await navigator.mediaDevices.getUserMedia({ video: true });
+        video.srcObject = webcamStream;
+        video.style.display = 'block';
+        placeholder.style.display = 'none';
+      } catch (err) {
+        console.log("Webcam access declined or not found. Simulating offline sensor.");
+        video.style.display = 'none';
+        placeholder.style.display = 'flex';
+      }
+
+      overlay.classList.add('active');
+      laser.classList.add('active');
+
+      // Scan duration animation simulation
+      let progress = 0;
+      const interval = setInterval(() => {
+        progress += 20;
+        if (progress >= 100) {
+          clearInterval(interval);
+          completeBiometricScan();
+        }
+      }, 800);
+    }
+
+    function completeBiometricScan() {
+      // Release camera streams
+      if (webcamStream) {
+        webcamStream.getTracks().forEach(track => track.stop());
+        webcamStream = null;
+      }
+      
+      document.getElementById('scannerVideo').style.display = 'none';
+      document.getElementById('scannerPlaceholder').style.display = 'flex';
+      document.getElementById('scannerOverlay').classList.remove('active');
+      document.getElementById('scannerLaser').classList.remove('active');
+      
+      const btn = document.getElementById('btnStartScan');
+      btn.disabled = false;
+      btn.innerHTML = `<i data-lucide="play" style="width:16px;"></i><span>Start Biometric Evaluation</span>`;
+      lucide.createIcons();
+
+      // Compute randomized sensor scores
+      const tension = Math.floor(40 + Math.random() * 45);
+      const jitter = Math.floor(35 + Math.random() * 45);
+      const cogload = Math.floor(45 + Math.random() * 45);
+
+      const finalScore = Math.round((tension * 0.4) + (jitter * 0.3) + (cogload * 0.3));
+      
+      let tier = 'low';
+      if (finalScore >= 75) tier = 'high';
+      else if (finalScore >= 40) tier = 'moderate';
+
+      let explanationText = "";
+      if (tier === 'high') {
+        explanationText = "SAATHI sensors detected elevated facial micro-tension, vocal tremors, and high cognitive typing drag. Deep cognitive fatigue indicated.";
+      } else if (tier === 'moderate') {
+        explanationText = "Sensor values denote mild physical tension around eyebrows and slight speech jitter. Deadlines pressure suggested.";
+      } else {
+        explanationText = "Biometric indicators stable. Muscle relaxation and speech frequency baseline optimal.";
+      }
+
+      db.createDistressScore(currentUser.id, finalScore, tier, explanationText);
+
+      // Show Report panel
+      document.getElementById('scanReportCard').style.display = 'block';
+      const badge = document.getElementById('reportTierBadge');
+      badge.className = `distress-tier-badge ${tier}`;
+      badge.textContent = `${tier.toUpperCase()} DISTRESS (${finalScore})`;
+      document.getElementById('reportDesc').textContent = explanationText;
+
+      // Animate progress bars
+      document.getElementById('barTension').style.width = `${tension}%`;
+      document.getElementById('txtTensionVal').textContent = `${tension}%`;
+      
+      document.getElementById('barJitter').style.width = `${jitter}%`;
+      document.getElementById('txtJitterVal').textContent = `${jitter}%`;
+
+      document.getElementById('barCogLoad').style.width = `${cogload}%`;
+      document.getElementById('txtCogLoadVal').textContent = `${cogload}%`;
+
+      // Trigger Smart Recovery Breathing Widget if distress is elevated
+      if (tier === 'moderate' || tier === 'high') {
+        startBreathingExercise();
+      } else {
+        document.getElementById('breathingWidget').style.display = 'none';
+      }
+    }
+
+    // Breathing recover cycle
+    let breathingInterval = null;
+    function startBreathingExercise() {
+      document.getElementById('breathingWidget').style.display = 'block';
+      const wrapper = document.getElementById('breathingCircleWrap');
+      const timer = document.getElementById('breathingTimer');
+      const status = document.getElementById('breathingStatus');
+      
+      if (breathingInterval) clearInterval(breathingInterval);
+      
+      let phase = 'Inhale';
+      let sec = 4;
+      
+      wrapper.className = "breathing-circle-wrapper inhale";
+      status.textContent = "Breathe In slowly...";
+      timer.textContent = sec;
+
+      breathingInterval = setInterval(() => {
+        sec--;
+        timer.textContent = sec;
+        
+        if (sec <= 0) {
+          if (phase === 'Inhale') {
+            phase = 'Hold';
+            sec = 4;
+            wrapper.className = "breathing-circle-wrapper hold";
+            status.textContent = "Hold your breath...";
+          } else if (phase === 'Hold') {
+            phase = 'Exhale';
+            sec = 4;
+            wrapper.className = "breathing-circle-wrapper exhale";
+            status.textContent = "Exhale tension...";
+          } else {
+            phase = 'Inhale';
+            sec = 4;
+            wrapper.className = "breathing-circle-wrapper inhale";
+            status.textContent = "Breathe In slowly...";
+          }
+        }
+      }, 1000);
+    }
+
+    // ==========================================
+    // DIARY JOURNAL CONTROLLER
+    // ==========================================
+    function loadJournalData() {
+      const list = document.getElementById('journalHistoryList');
+      list.innerHTML = '';
+
+      const entries = db.getEntries().filter(e => e.user_id === currentUser.id && e.type === 'journal');
+      if (entries.length === 0) {
+        list.innerHTML = `
+          <div style="text-align:center;color:var(--text-muted);padding:30px 10px;">
+            <i data-lucide="book-open" style="width:36px;height:36px;margin-bottom:8px;color:var(--border-color);"></i>
+            <p style="font-weight:600;font-size:13.5px;">Diary logs archive empty.</p>
+          </div>
+        `;
+        return;
+      }
+
+      entries.forEach(entry => {
+        // Parse custom content mood tag
+        const textParts = entry.content.split(' [Mood: ');
+        const cleanText = textParts[0];
+        const mood = textParts[1] ? textParts[1].replace(']', '') : 'Neutral';
+
+        let sentimentClass = 'neutral';
+        let sentimentText = 'Neutral Baseline';
+        if (entry.sentiment_score > 0.15) {
+          sentimentClass = 'positive';
+          sentimentText = 'Positive Sentiment';
+        } else if (entry.sentiment_score < -0.15) {
+          sentimentClass = 'stress';
+          sentimentText = 'Stress Indicators';
+        }
+
+        const dateStr = new Date(entry.created_at).toLocaleDateString(undefined, {
+          weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute:'2-digit'
+        });
+
+        const card = document.createElement('div');
+        card.className = 'entry-history-card';
+        card.innerHTML = `
+          <div class="entry-history-header">
+            <span>${dateStr}</span>
+            <div style="display:flex;gap:6px;">
+              <span class="entry-badge journal">${mood}</span>
+              <span class="sentiment-indicator ${sentimentClass}">${sentimentText}</span>
+            </div>
+          </div>
+          <p style="font-size:13.5px;line-height:1.6;color:var(--text-dark);">${cleanText}</p>
+        `;
+        list.appendChild(card);
+      });
+    }
+
+    function handleJournalSubmit(e) {
+      e.preventDefault();
+      const mood = document.getElementById('journalMood').value;
+      const text = document.getElementById('journalText').value.trim();
+
+      let sentiment = 0.0;
+      const lower = text.toLowerCase();
+      // Sentiment lexicons
+      const positiveKeywords = ['happy', 'good', 'great', 'awesome', 'fine', 'better', 'thankful', 'peaceful'];
+      const negativeKeywords = ['sad', 'anxious', 'heavy', 'stressed', 'tired', 'bad', 'hurt', 'lonely', 'worried', 'hopeless', 'depressed'];
+      let posCount = 0;
+      let negCount = 0;
+      positiveKeywords.forEach(k => { if (lower.includes(k)) posCount++; });
+      negativeKeywords.forEach(k => { if (lower.includes(k)) negCount++; });
+
+      if (mood === 'Grateful' || mood === 'Peaceful' || mood === 'Energized') sentiment += 0.4;
+      if (mood === 'Sad' || mood === 'Stressed' || mood === 'Anxious') sentiment -= 0.5;
+
+      if (posCount > negCount) sentiment += 0.3;
+      else if (negCount > posCount) sentiment -= 0.4;
+
+      sentiment = Math.max(-1.0, Math.min(1.0, sentiment));
+
+      db.createEntry(currentUser.id, 'journal', `${text} [Mood: ${mood}]`, sentiment);
+
+      // Recalculate distress score
+      const entries = db.getEntries().filter(ent => ent.user_id === currentUser.id);
+      const avgSentiment = entries.slice(0, 5).reduce((acc, curr) => acc + Number(curr.sentiment_score), 0) / Math.min(entries.length, 5);
+      
+      let newScoreVal = Math.round(50 - (avgSentiment * 40));
+      newScoreVal = Math.max(0, Math.min(100, newScoreVal));
+
+      let newTier = 'low';
+      if (newScoreVal >= 75) newTier = 'high';
+      else if (newScoreVal >= 40) newTier = 'moderate';
+
+      const explanation = newTier === 'high' 
+        ? 'Distress score index elevated based on journal content sentiment.' 
+        : newTier === 'moderate' 
+          ? 'Mild stress levels noted. Rest and self-care resources are recommended.'
+          : 'Emotional baseline is optimal.';
+
+      db.createDistressScore(currentUser.id, newScoreVal, newTier, explanation);
+
+      document.getElementById('journalText').value = '';
+      loadJournalData();
+      alert("Diary entry saved securely!");
+    }
+
+    // ==========================================
+    // SETTINGS PREFERENCES CONTROLLER
+    // ==========================================
+    function loadSettingsData() {
+      document.getElementById('settingsContactName').value = currentUser.emergency_contact_name || '';
+      document.getElementById('settingsContactPhone').value = currentUser.emergency_contact_phone || '';
+      
+      const lang = currentUser.language || 'en';
+      document.querySelectorAll('.btn-lang').forEach(b => b.classList.remove('active'));
+      if (lang === 'en') document.getElementById('btnLangEn').classList.add('active');
+      if (lang === 'hi') document.getElementById('btnLangHi').classList.add('active');
+      if (lang === 'bn') document.getElementById('btnLangBn').classList.add('active');
+    }
+
+    function setAppLanguage(lang) {
+      currentUser.language = lang;
+      db.updateProfile(currentUser.id, currentUser);
+      loadSettingsData();
+    }
+
+    function handleSettingsSave(e) {
+      e.preventDefault();
+      const name = document.getElementById('settingsContactName').value;
+      const phone = document.getElementById('settingsContactPhone').value;
+
+      currentUser.emergency_contact_name = name;
+      currentUser.emergency_contact_phone = phone;
+      currentUser.emergency_contact_opt_in = !!(name && phone);
+
+      db.updateProfile(currentUser.id, currentUser);
+      alert("Preferences saved successfully!");
+    }
+
+    function exportMockData() {
+      const data = {
+        profile: currentUser,
+        scores: db.getDistressScores(currentUser.id),
+        entries: db.getEntries().filter(e => e.user_id === currentUser.id)
+      };
+      
+      const jsonStr = JSON.stringify(data, null, 2);
+      const blob = new Blob([jsonStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `saathi_clinical_export_${currentUser.full_name.replace(' ', '_')}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    function purgeMockData() {
+      if (confirm("Are you sure you want to request data deletion? This will wipe out all local logs, scores, and settings permanently.")) {
+        localStorage.clear();
+        initDatabase();
+        currentUser = null;
+        navigate('login');
+      }
+    }
+
+    // ==========================================
+    // COUNSELLOR QUEUE CONTROLLER
+    // ==========================================
+    function loadCounsellorData() {
+      const list = document.getElementById('escQueueList');
+      list.innerHTML = '';
+      
+      const escs = db.getEscalations();
+      if (escs.length === 0) {
+        list.innerHTML = `<div style="text-align:center;color:var(--text-muted);padding:30px;">Queue is currently clear.</div>`;
+        return;
+      }
+
+      escs.forEach(esc => {
+        const student = db.getProfile(esc.user_id);
+        const name = student ? student.full_name : 'Anonymized Student';
+        
+        const card = document.createElement('div');
+        card.className = `esc-queue-card ${esc.tier} ${esc.status === 'contacted' ? 'resolved' : ''}`;
+        card.onclick = () => selectEscalationItem(esc, name);
+        card.innerHTML = `
+          <div class="esc-header">
+            <span class="esc-name">${name}</span>
+            <span class="esc-time">${new Date(esc.created_at).toLocaleDateString()}</span>
+          </div>
+          <div style="font-size:11px;color:var(--text-muted);display:flex;justify-content:space-between;align-items:center;">
+            <span>Distress level: <b>${esc.tier.toUpperCase()}</b></span>
+            <span>Status: <b>${esc.status.toUpperCase()}</b></span>
+          </div>
+        `;
+        list.appendChild(card);
+      });
+    }
+
+    function selectEscalationItem(esc, name) {
+      selectedEscObj = esc;
+      document.getElementById('counsellorOutreachCard').style.display = 'block';
+      document.getElementById('outreachHeader').innerHTML = `<i data-lucide="mail"></i> Outreach to ${name}`;
+      document.getElementById('outreachDetails').textContent = `Compose a supportive outreach note. Escalated due to: ${esc.tier.toUpperCase()} distress trigger.`;
+      lucide.createIcons();
+    }
+
+    function handleSendOutreach(e) {
+      e.preventDefault();
+      const text = document.getElementById('outreachMessageText').value.trim();
+      
+      // Simulate outreach creation
+      db.createEntry(
+        selectedEscObj.user_id,
+        'chat',
+        `[Support outreach message from Counsellor ${currentUser.full_name}]: ${text}`,
+        0.0
+      );
+
+      // Mark escalation status resolved/contacted
+      const list = db.getEscalations();
+      const matched = list.find(e => e.id === selectedEscObj.id);
+      if (matched) {
+        matched.status = 'contacted';
+        matched.updated_at = new Date().toISOString();
+        db.saveEscalations(list);
+      }
+
+      document.getElementById('outreachMessageText').value = '';
+      document.getElementById('counsellorOutreachCard').style.display = 'none';
+      selectedEscObj = null;
+      loadCounsellorData();
+      alert("Outreach support card generated and sent to the student!");
+    }
+
+    // ==========================================
+    // ADMIN ANALYTICS CONTROLLER
+    // ==========================================
+    function loadAdminData() {
+      const profiles = db.getProfiles();
+      const scores = db.getScores();
+      const escs = db.getEscalations();
+
+      const totalUsers = profiles.filter(p => p.role === 'user').length;
+      document.getElementById('adminTotalUsers').textContent = totalUsers;
+      document.getElementById('adminActiveUsers').textContent = totalUsers;
+      document.getElementById('adminCounsellors').textContent = profiles.filter(p => p.role === 'counsellor' || p.role === 'admin').length;
+
+      // Risk computation
+      const highScoresCount = escs.filter(e => e.status === 'pending').length;
+      const rate = totalUsers > 0 ? Math.round((highScoresCount / totalUsers) * 100) : 0;
+      document.getElementById('adminElevatedRisk').textContent = `${rate}%`;
+
+      // Load Registry List
+      const list = document.getElementById('adminEscalationList');
+      list.innerHTML = '';
+      
+      if (escs.length === 0) {
+        list.innerHTML = `<div style="text-align:center;color:var(--text-muted);padding:20px;">No escalation registers loaded.</div>`;
+        return;
+      }
+
+      escs.forEach(esc => {
+        const student = db.getProfile(esc.user_id);
+        const name = student ? student.full_name : 'Anonymized Student';
+        
+        const dateStr = new Date(esc.created_at).toLocaleDateString(undefined, {
+          month: 'short', day: 'numeric', hour: '2-digit', minute:'2-digit'
+        });
+
+        const card = document.createElement('div');
+        card.className = 'entry-history-card';
+        card.innerHTML = `
+          <div class="entry-history-header">
+            <span>${dateStr}</span>
+            <span class="entry-badge journal" style="background-color:var(--danger);color:white;">Escalated: ${esc.tier}</span>
+          </div>
+          <p style="font-size:13px;color:var(--text-dark);">
+            Student: <b>${name}</b> | Status: <b>${esc.status.toUpperCase()}</b>
+          </p>
+        `;
+        list.appendChild(card);
+      });
+    }
+
+    // ==========================================
+    // APPLICATION ENTRY POINT
+    // ==========================================
+    initDatabase();
+    navigate('login');
+  </script>
+</body>
+</html>
