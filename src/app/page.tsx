@@ -29,7 +29,6 @@ import {
   Eye,
   Shield,
   Smile,
-  Star,
   Layers,
   ArrowUpRight
 } from 'lucide-react';
@@ -382,16 +381,6 @@ export default function LandingPage() {
               <Heart className="w-4 h-4 text-rose-500 fill-rose-500" />
               Try 30-Sec Pause
             </button>
-          </div>
-
-          {/* Student Trust Footer */}
-          <div className="flex items-center justify-center lg:justify-start gap-4 pt-1 text-xs text-[#1E4339] font-medium">
-            <div className="flex -space-x-2">
-              <span className="inline-block h-7 w-7 rounded-full ring-2 ring-[#8FCBB0] bg-indigo-500 text-white flex items-center justify-center text-[10px] font-bold">AN</span>
-              <span className="inline-block h-7 w-7 rounded-full ring-2 ring-[#8FCBB0] bg-emerald-500 text-white flex items-center justify-center text-[10px] font-bold">RK</span>
-              <span className="inline-block h-7 w-7 rounded-full ring-2 ring-[#8FCBB0] bg-amber-500 text-white flex items-center justify-center text-[10px] font-bold">PS</span>
-            </div>
-            <span>Built for campus student privacy &bull; Zero data retention</span>
           </div>
         </div>
 
@@ -885,93 +874,6 @@ export default function LandingPage() {
                 </div>
               );
             })}
-          </div>
-        </div>
-      </section>
-
-      {/* ================= STUDENT & COUNSELOR IMPACT CARDS DECK FORMAT ================= */}
-      <section className="max-w-6xl mx-auto px-6 py-16 w-full animate-slide-in-up">
-        <div className="text-center max-w-2xl mx-auto mb-12">
-          <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/70 rounded-full text-xs font-bold text-[#142E27] mb-2 shadow-2xs">
-            <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
-            <span>Student & Counselor Trust</span>
-          </div>
-          <h2 className="font-poppins font-bold text-2xl sm:text-3xl text-[#142E27]">
-            Empowering Campus Communities
-          </h2>
-          <p className="text-[#1E4339] mt-2 text-sm sm:text-base">
-            How students and mental health staff rely on SAATHI’s respectful, low-friction check-ins.
-          </p>
-        </div>
-
-        <div className="grid md:grid-cols-3 gap-6">
-          {/* Review Card 1 */}
-          <div className="bg-white/95 p-6 rounded-3xl border border-white shadow-sm flex flex-col justify-between gap-4 transition-transform hover:-translate-y-1">
-            <div className="space-y-3">
-              <div className="flex gap-1 text-amber-400">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="w-4 h-4 fill-amber-400" />
-                ))}
-              </div>
-              <p className="text-gray-700 text-sm leading-relaxed italic">
-                &ldquo;During exam week my anxiety peaked. Playing 5 minutes of Flappy Bird in the Relief Arcade actually broke my panic spiral without feeling clinical.&rdquo;
-              </p>
-            </div>
-            <div className="flex items-center gap-3 pt-3 border-t border-gray-100">
-              <div className="w-8 h-8 rounded-full bg-[#3E5FE0] text-white font-bold text-xs flex items-center justify-center">
-                AK
-              </div>
-              <div>
-                <h4 className="text-xs font-bold text-[#142E27]">Ananya K.</h4>
-                <p className="text-[11px] text-gray-500">Computer Science &bull; 3rd Year</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Review Card 2 */}
-          <div className="bg-white/95 p-6 rounded-3xl border border-white shadow-sm flex flex-col justify-between gap-4 transition-transform hover:-translate-y-1">
-            <div className="space-y-3">
-              <div className="flex gap-1 text-amber-400">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="w-4 h-4 fill-amber-400" />
-                ))}
-              </div>
-              <p className="text-gray-700 text-sm leading-relaxed italic">
-                &ldquo;Traditional campus mental health surveys have less than 5% participation due to stigma. SAATHI&apos;s passive telemetry bridges students to us early without violating trust.&rdquo;
-              </p>
-            </div>
-            <div className="flex items-center gap-3 pt-3 border-t border-gray-100">
-              <div className="w-8 h-8 rounded-full bg-emerald-600 text-white font-bold text-xs flex items-center justify-center">
-                DR
-              </div>
-              <div>
-                <h4 className="text-xs font-bold text-[#142E27]">Dr. R. Sharma</h4>
-                <p className="text-[11px] text-gray-500">University Student Welfare Officer</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Review Card 3 */}
-          <div className="bg-white/95 p-6 rounded-3xl border border-white shadow-sm flex flex-col justify-between gap-4 transition-transform hover:-translate-y-1">
-            <div className="space-y-3">
-              <div className="flex gap-1 text-amber-400">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="w-4 h-4 fill-amber-400" />
-                ))}
-              </div>
-              <p className="text-gray-700 text-sm leading-relaxed italic">
-                &ldquo;The dark circle vision and voice check flagged my exhaustion before I admitted it to myself. The 4-7-8 breathing reset helped me sleep for the first time in days.&rdquo;
-              </p>
-            </div>
-            <div className="flex items-center gap-3 pt-3 border-t border-gray-100">
-              <div className="w-8 h-8 rounded-full bg-amber-600 text-white font-bold text-xs flex items-center justify-center">
-                PB
-              </div>
-              <div>
-                <h4 className="text-xs font-bold text-[#142E27]">Pranav B.</h4>
-                <p className="text-[11px] text-gray-500">Medical Student &bull; Final Year</p>
-              </div>
-            </div>
           </div>
         </div>
       </section>
