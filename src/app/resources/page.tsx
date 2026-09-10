@@ -14,7 +14,11 @@ import {
   ExternalLink,
   ChevronRight,
   Activity,
-  Heart
+  Heart,
+  Headphones,
+  Music,
+  Volume2,
+  Sparkles
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -22,12 +26,291 @@ interface ResourceCard {
   id: string;
   title: string;
   description: string;
-  category: 'Breathing' | 'Grounding' | 'Reading' | 'Connect' | 'Yoga';
+  category: 'Breathing' | 'Grounding' | 'Reading' | 'Connect' | 'Yoga' | 'Music';
   duration: string;
   instructions: string[];
   linkText?: string;
   linkHref?: string;
 }
+
+export interface MusicTrack {
+  id: string;
+  title: string;
+  artist: string;
+  language: 'English' | 'Hindi' | 'Bengali';
+  vibe: 'Happy & Uplifting' | 'Vibey & Chill' | 'Spiritual Peace' | 'Nostalgic & Warm';
+  duration: string;
+  description: string;
+  youtubeQuery: string;
+}
+
+export const MUSIC_LIBRARY: MusicTrack[] = [
+  // ENGLISH - HAPPY & VIBEY
+  {
+    id: 'm-en-1',
+    title: 'Here Comes The Sun',
+    artist: 'The Beatles',
+    language: 'English',
+    vibe: 'Happy & Uplifting',
+    duration: '3:05',
+    description: 'Timeless pure sunshine and acoustic warmth that lifts away gloom.',
+    youtubeQuery: 'The Beatles Here Comes The Sun'
+  },
+  {
+    id: 'm-en-2',
+    title: 'Better Days',
+    artist: 'OneRepublic',
+    language: 'English',
+    vibe: 'Happy & Uplifting',
+    duration: '2:24',
+    description: 'High-energy optimism and dopamine booster for heavy days.',
+    youtubeQuery: 'OneRepublic Better Days'
+  },
+  {
+    id: 'm-en-3',
+    title: 'Good Life',
+    artist: 'OneRepublic',
+    language: 'English',
+    vibe: 'Vibey & Chill',
+    duration: '4:13',
+    description: 'Carefree, whistle-along acoustic track celebrating the present.',
+    youtubeQuery: 'OneRepublic Good Life'
+  },
+  {
+    id: 'm-en-4',
+    title: 'Sunflower',
+    artist: 'Post Malone & Swae Lee',
+    language: 'English',
+    vibe: 'Vibey & Chill',
+    duration: '2:38',
+    description: 'Smooth, feel-good melodic groove with breezy, infectious rhythm.',
+    youtubeQuery: 'Post Malone Swae Lee Sunflower'
+  },
+  {
+    id: 'm-en-5',
+    title: 'Walking On Sunshine',
+    artist: 'Katrina and the Waves',
+    language: 'English',
+    vibe: 'Happy & Uplifting',
+    duration: '3:58',
+    description: 'Pure joyous adrenaline and irresistible feel-good energy.',
+    youtubeQuery: 'Katrina and the Waves Walking On Sunshine'
+  },
+  {
+    id: 'm-en-6',
+    title: 'Weightless',
+    artist: 'Marconi Union',
+    language: 'English',
+    vibe: 'Spiritual Peace',
+    duration: '8:08',
+    description: 'Scientifically engineered with sound therapists to reduce heart rate and cortisol by 65%.',
+    youtubeQuery: 'Marconi Union Weightless'
+  },
+  {
+    id: 'm-en-7',
+    title: 'Fix You',
+    artist: 'Coldplay',
+    language: 'English',
+    vibe: 'Nostalgic & Warm',
+    duration: '4:55',
+    description: 'Gentle emotional crescendo that wraps you in profound comfort.',
+    youtubeQuery: 'Coldplay Fix You'
+  },
+  {
+    id: 'm-en-8',
+    title: 'Lovely Day',
+    artist: 'Bill Withers',
+    language: 'English',
+    vibe: 'Happy & Uplifting',
+    duration: '4:15',
+    description: 'Soulful warmth and sustained optimism that brings an instant smile.',
+    youtubeQuery: 'Bill Withers Lovely Day'
+  },
+
+  // HINDI - HAPPY, SOULFUL & VIBEY
+  {
+    id: 'm-hi-1',
+    title: 'Love You Zindagi',
+    artist: 'Amit Trivedi & Jasleen Royal (Dear Zindagi)',
+    language: 'Hindi',
+    vibe: 'Happy & Uplifting',
+    duration: '3:51',
+    description: 'The ultimate self-love anthem reminding you to smile and embrace life gently.',
+    youtubeQuery: 'Love You Zindagi Dear Zindagi Amit Trivedi'
+  },
+  {
+    id: 'm-hi-2',
+    title: 'Ilahi',
+    artist: 'Arijit Singh (Yeh Jawaani Hai Deewani)',
+    language: 'Hindi',
+    vibe: 'Vibey & Chill',
+    duration: '3:48',
+    description: 'Wanderlust, freedom, and acoustic joy that makes you feel alive.',
+    youtubeQuery: 'Ilahi Arijit Singh Yeh Jawaani Hai Deewani'
+  },
+  {
+    id: 'm-hi-3',
+    title: 'Kun Faya Kun',
+    artist: 'A.R. Rahman, Javed Ali & Mohit Chauhan',
+    language: 'Hindi',
+    vibe: 'Spiritual Peace',
+    duration: '7:53',
+    description: 'Deep spiritual solace that melts anxiety into sacred stillness.',
+    youtubeQuery: 'Kun Faya Kun Rockstar AR Rahman'
+  },
+  {
+    id: 'm-hi-4',
+    title: 'Aashayein',
+    artist: 'KK (Iqbal)',
+    language: 'Hindi',
+    vibe: 'Happy & Uplifting',
+    duration: '4:21',
+    description: 'Ignites inner courage, resilience, and belief in your own light.',
+    youtubeQuery: 'Aashayein KK Iqbal'
+  },
+  {
+    id: 'm-hi-5',
+    title: 'Matargashti',
+    artist: 'Mohit Chauhan (Tamasha)',
+    language: 'Hindi',
+    vibe: 'Happy & Uplifting',
+    duration: '5:28',
+    description: 'Playful, lighthearted, and impossible to listen to without smiling.',
+    youtubeQuery: 'Matargashti Tamasha Mohit Chauhan AR Rahman'
+  },
+  {
+    id: 'm-hi-6',
+    title: 'Safarnama',
+    artist: 'Lucky Ali (Tamasha)',
+    language: 'Hindi',
+    vibe: 'Vibey & Chill',
+    duration: '4:11',
+    description: 'Lucky Ali’s soothing tone delivering sweet relief and closure.',
+    youtubeQuery: 'Safarnama Lucky Ali Tamasha'
+  },
+  {
+    id: 'm-hi-7',
+    title: 'Der Lagi Lekin',
+    artist: 'Shankar Mahadevan (ZNMD)',
+    language: 'Hindi',
+    vibe: 'Vibey & Chill',
+    duration: '5:57',
+    description: 'Reassuring breeze reminding you that it is never too late to begin again.',
+    youtubeQuery: 'Der Lagi Lekin ZNMD Shankar Mahadevan'
+  },
+  {
+    id: 'm-hi-8',
+    title: 'Hairat',
+    artist: 'Lucky Ali (Anjaana Anjaani)',
+    language: 'Hindi',
+    vibe: 'Vibey & Chill',
+    duration: '4:08',
+    description: 'Breezy road-trip rock with signature soulful acoustic guitar.',
+    youtubeQuery: 'Hairat Lucky Ali Anjaana Anjaani'
+  },
+  {
+    id: 'm-hi-9',
+    title: 'Subhanallah',
+    artist: 'Sreerama Chandra & Shilpa Rao (YJHD)',
+    language: 'Hindi',
+    vibe: 'Nostalgic & Warm',
+    duration: '4:09',
+    description: 'Gentle, romantic warmth that feels like a cozy cup of tea.',
+    youtubeQuery: 'Subhanallah Yeh Jawaani Hai Deewani'
+  },
+  {
+    id: 'm-hi-10',
+    title: 'Kabira',
+    artist: 'Tochi Raina & Rekha Bhardwaj (YJHD)',
+    language: 'Hindi',
+    vibe: 'Spiritual Peace',
+    duration: '3:43',
+    description: 'Rustic, grounding folk resonance that brings you home to yourself.',
+    youtubeQuery: 'Kabira Yeh Jawaani Hai Deewani Tochi Raina'
+  },
+
+  // BENGALI - HAPPY, SOULFUL & VIBEY
+  {
+    id: 'm-bn-1',
+    title: 'Aalo Aalo',
+    artist: 'Joy Sarkar & Shaan',
+    language: 'Bengali',
+    vibe: 'Happy & Uplifting',
+    duration: '4:42',
+    description: 'Morning sunlight captured in melody; pure sweet optimism.',
+    youtubeQuery: 'Aalo Aalo Joy Sarkar Shaan'
+  },
+  {
+    id: 'm-bn-2',
+    title: 'Majhe Majhe Tobo Dekha Pai',
+    artist: 'Rabindrasangeet / Arijit Singh',
+    language: 'Bengali',
+    vibe: 'Spiritual Peace',
+    duration: '4:30',
+    description: 'Timeless spiritual yearning and deep emotional solace.',
+    youtubeQuery: 'Majhe Majhe Tobo Dekha Pai Arijit Singh'
+  },
+  {
+    id: 'm-bn-3',
+    title: 'Ami Banglay Gaan Gai',
+    artist: 'Pratul Mukhopadhyay',
+    language: 'Bengali',
+    vibe: 'Nostalgic & Warm',
+    duration: '5:12',
+    description: 'A deep sense of cultural belonging and soulful comfort.',
+    youtubeQuery: 'Ami Banglay Gaan Gai Pratul Mukhopadhyay'
+  },
+  {
+    id: 'm-bn-4',
+    title: 'Purono Sei Diner Kotha',
+    artist: 'Rabindrasangeet',
+    language: 'Bengali',
+    vibe: 'Nostalgic & Warm',
+    duration: '3:35',
+    description: 'Heartwarming memories of friendship and reunion.',
+    youtubeQuery: 'Purono Sei Diner Kotha Rabindrasangeet'
+  },
+  {
+    id: 'm-bn-5',
+    title: 'Bandhu Re',
+    artist: 'Anupam Roy',
+    language: 'Bengali',
+    vibe: 'Vibey & Chill',
+    duration: '4:15',
+    description: 'A soothing ode to enduring friendship across life storms.',
+    youtubeQuery: 'Bandhu Re Anupam Roy'
+  },
+  {
+    id: 'm-bn-6',
+    title: 'Keno Megh Ashe',
+    artist: 'Rabindrasangeet / Somlata Acharyya',
+    language: 'Bengali',
+    vibe: 'Vibey & Chill',
+    duration: '3:50',
+    description: 'Sweet monsoon rain vibes that wash away exhaustion.',
+    youtubeQuery: 'Keno Megh Ashe Hridoye Somlata'
+  },
+  {
+    id: 'm-bn-7',
+    title: 'Tomae Gaan Shonabo',
+    artist: 'Rabindrasangeet / Sahana Bajpaie',
+    language: 'Bengali',
+    vibe: 'Spiritual Peace',
+    duration: '4:10',
+    description: 'Ethereal, gentle acoustic solace for the soul.',
+    youtubeQuery: 'Tomae Gaan Shonabo Sahana Bajpaie'
+  },
+  {
+    id: 'm-bn-8',
+    title: 'Bojhena Shey Bojhena',
+    artist: 'Arijit Singh',
+    language: 'Bengali',
+    vibe: 'Nostalgic & Warm',
+    duration: '4:35',
+    description: 'Heartfelt emotional release and melodic beauty.',
+    youtubeQuery: 'Bojhena Shey Bojhena Arijit Singh'
+  }
+];
 
 const STATIC_RESOURCES: ResourceCard[] = [
   {
@@ -215,6 +498,16 @@ export default function ResourcesPage() {
     ? STATIC_RESOURCES 
     : STATIC_RESOURCES.filter(r => r.category === selectedCategory);
 
+  // Music filter state
+  const [musicLangFilter, setMusicLangFilter] = useState<'All' | 'Hindi' | 'English' | 'Bengali'>('All');
+  const [musicVibeFilter, setMusicVibeFilter] = useState<string>('All');
+
+  const filteredMusic = MUSIC_LIBRARY.filter(m => {
+    const matchLang = musicLangFilter === 'All' || m.language === musicLangFilter;
+    const matchVibe = musicVibeFilter === 'All' || m.vibe === musicVibeFilter;
+    return matchLang && matchVibe;
+  });
+
   // Active breathing simulation cycle
   useEffect(() => {
     if (!breathingActive || !activeResource) return;
@@ -306,6 +599,7 @@ export default function ResourcesPage() {
 
   const getCategoryIcon = (category: string) => {
     switch (category) {
+      case 'Music': return Headphones;
       case 'Breathing': return Wind;
       case 'Grounding': return Compass;
       case 'Reading': return BookOpen;
@@ -315,39 +609,142 @@ export default function ResourcesPage() {
   };
 
   return (
-    <div className="flex-1 max-w-6xl mx-auto w-full px-6 py-10 flex flex-col gap-8">
+    <div className="flex-1 max-w-6xl mx-auto w-full px-4 sm:px-6 py-8 flex flex-col gap-8">
       
       {/* Header */}
       <div className="flex items-center gap-3">
-        <Link href="/dashboard" className="p-1.5 hover:bg-white rounded-lg text-gray-400 hover:text-gray-600 transition-colors shadow-sm">
+        <Link href="/dashboard" className="p-2 hover:bg-white rounded-xl text-gray-400 hover:text-gray-700 transition-colors shadow-sm border border-gray-100">
           <ArrowLeft className="w-5 h-5" />
         </Link>
         <div>
-          <h1 className="font-poppins font-bold text-3xl text-[#142E27]">Coping & Self-Help</h1>
-          <p className="text-[#1E4339] text-sm mt-1 font-medium">Guided grounding, breathing practices, and stress education.</p>
+          <h1 className="font-poppins font-bold text-2xl sm:text-3xl text-[#142E27]">Coping & Self-Help</h1>
+          <p className="text-[#1E4339] text-sm mt-0.5 font-medium">Uplifting music therapy, grounding exercises, breathing resets, and gentle movement.</p>
         </div>
       </div>
 
       {/* Category filter chips */}
-      <div className="flex gap-2.5 overflow-x-auto pb-2 border-b border-[#EEF1FB]">
-        {['All', 'Breathing', 'Grounding', 'Yoga', 'Reading', 'Connect'].map((cat) => {
+      <div className="flex gap-2 overflow-x-auto pb-2 border-b border-[#EEF1FB] scrollbar-none">
+        {['All', 'Music', 'Breathing', 'Grounding', 'Yoga', 'Reading', 'Connect'].map((cat) => {
           const active = selectedCategory === cat;
           return (
             <button
               key={cat}
               onClick={() => setSelectedCategory(cat)}
-              className={`px-5 py-2.5 rounded-full text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 whitespace-nowrap ${
+              className={`px-4 py-2 rounded-2xl text-xs font-bold transition-all shadow-xs flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
                 active 
-                  ? 'bg-[#3E5FE0] text-white' 
-                  : 'bg-white hover:bg-gray-50 text-[#3E6B63] border border-gray-100'
+                  ? 'bg-[#142E27] text-white shadow-sm' 
+                  : 'bg-white hover:bg-gray-50 text-[#1E4339] border border-gray-100'
               }`}
             >
-              {cat !== 'All' && React.createElement(getCategoryIcon(cat), { className: 'w-3.5 h-3.5' })}
-              <span>{cat}</span>
+              {cat !== 'All' && React.createElement(getCategoryIcon(cat), { className: 'w-3.5 h-3.5 text-[#8FCBB0]' })}
+              <span>{cat === 'Music' ? '🎵 Music Therapy' : cat}</span>
             </button>
           );
         })}
       </div>
+
+      {/* MUSIC THERAPY & MOOD LIFTERS SECTION */}
+      {(selectedCategory === 'All' || selectedCategory === 'Music') && (
+        <div className="bg-white p-6 sm:p-8 rounded-3xl shadow-sm border border-gray-100 flex flex-col gap-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 bg-[#8FCBB0]/25 text-[#142E27] rounded-2xl">
+                  <Headphones className="w-5 h-5 text-[#142E27]" />
+                </div>
+                <h2 className="font-poppins font-bold text-xl sm:text-2xl text-[#142E27]">Music Therapy & Vibey Mood Lifters</h2>
+              </div>
+              <p className="text-xs sm:text-sm text-[#1E4339] mt-1 font-medium">
+                Scientifically proven uplifting, soothing, and feel-good tracks across Bengali, Hindi, and English.
+              </p>
+            </div>
+
+            {/* Language filter pills */}
+            <div className="flex items-center gap-1.5 flex-wrap">
+              {(['All', 'Hindi', 'English', 'Bengali'] as const).map(lang => (
+                <button
+                  key={lang}
+                  onClick={() => setMusicLangFilter(lang)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all border cursor-pointer ${
+                    musicLangFilter === lang
+                      ? 'bg-[#142E27] text-white border-[#142E27] shadow-sm'
+                      : 'bg-[#F2F8F5] text-gray-600 hover:bg-gray-100 border-gray-200'
+                  }`}
+                >
+                  {lang === 'All' ? 'All Languages' : lang === 'Hindi' ? '🇮🇳 Hindi' : lang === 'English' ? '🇬🇧 English' : '🌾 Bengali'}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Vibe filter pills */}
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+            {['All', 'Happy & Uplifting', 'Vibey & Chill', 'Spiritual Peace', 'Nostalgic & Warm'].map(vibe => (
+              <button
+                key={vibe}
+                onClick={() => setMusicVibeFilter(vibe)}
+                className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-all cursor-pointer ${
+                  musicVibeFilter === vibe
+                    ? 'bg-[#8FCBB0] text-[#142E27] font-bold shadow-xs'
+                    : 'bg-gray-50 text-gray-500 hover:bg-gray-100 border border-gray-200/60'
+                }`}
+              >
+                {vibe}
+              </button>
+            ))}
+          </div>
+
+          {/* Music Grid */}
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filteredMusic.map(track => (
+              <div 
+                key={track.id}
+                className="bg-[#F2F8F5]/60 hover:bg-[#F2F8F5] p-5 rounded-2xl border border-[#8FCBB0]/25 hover:border-[#8FCBB0]/60 transition-all flex flex-col justify-between gap-3 group shadow-xs hover:shadow-md"
+              >
+                <div className="flex flex-col gap-2">
+                  <div className="flex justify-between items-start gap-2">
+                    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-white border border-gray-200 text-gray-600">
+                      {track.language === 'Hindi' ? '🇮🇳 Hindi' : track.language === 'English' ? '🇬🇧 English' : '🌾 Bengali'}
+                    </span>
+                    <span className="text-[10px] font-semibold text-[#3E6B63] bg-[#8FCBB0]/30 px-2 py-0.5 rounded-full">
+                      {track.vibe}
+                    </span>
+                  </div>
+
+                  <div>
+                    <h4 className="font-poppins font-bold text-base text-[#142E27] group-hover:text-[#3E6B63] transition-colors leading-snug">
+                      {track.title}
+                    </h4>
+                    <p className="text-xs text-gray-500 font-medium">{track.artist}</p>
+                  </div>
+
+                  <p className="text-xs text-gray-600 leading-relaxed mt-1 line-clamp-2">
+                    {track.description}
+                  </p>
+                </div>
+
+                <div className="flex items-center justify-between pt-2 border-t border-[#8FCBB0]/20">
+                  <span className="text-[11px] text-gray-400 font-medium flex items-center gap-1">
+                    <Volume2 className="w-3 h-3 text-[#8FCBB0]" />
+                    {track.duration}
+                  </span>
+
+                  <a
+                    href={`https://www.youtube.com/results?search_query=${encodeURIComponent(track.youtubeQuery)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-3 py-1.5 bg-[#8FCBB0] hover:bg-[#77bda0] text-[#142E27] rounded-xl text-xs font-bold transition-all shadow-xs flex items-center gap-1.5"
+                  >
+                    <Play className="w-3 h-3 fill-current" />
+                    <span>Listen Now</span>
+                    <ExternalLink className="w-3 h-3 opacity-60" />
+                  </a>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Resources grid */}
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">

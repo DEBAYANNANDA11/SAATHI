@@ -83,6 +83,7 @@ export default function BiometricScanPage() {
     stutterCount: number;
     cognitiveLoad: number;
     isUserHappy: boolean;
+    isMaskedSadness?: boolean;
     detectedReason: string;
     motivation: string;
     compliment?: string;
@@ -519,9 +520,9 @@ export default function BiometricScanPage() {
 
     // 2. Component Stress Indices
     // Facial Tension & Facial Fatigue (under-eye dark circles + eyelid droopiness)
-    const hasDarkCircleMention = lowerText.includes('dark circle') || lowerText.includes('tired') || lowerText.includes('sleep');
+    const hasDarkCircleMention = lowerText.includes('dark circle') || lowerText.includes('tired') || lowerText.includes('sleep') || lowerText.includes('eyes hurt');
     const facialFatigue = Math.min(100, (hasDarkCircleMention ? 65 : 30) + (sadCues * 10) + Math.floor(Math.random() * 15));
-    const darkCirclesDetected = facialFatigue >= 50;
+    const darkCirclesDetected = facialFatigue >= 48;
 
     const facialTension = Math.min(100, Math.max(15, 25 + (sadCues * 12) + (stutterCount * 8) + Math.floor(Math.random() * 15)));
     
@@ -532,8 +533,19 @@ export default function BiometricScanPage() {
     // Cognitive Load from typing cadence
     const cognitiveLoad = Math.min(100, Math.max(15, Math.round(100 - typingConsistency + (sadCues * 10) + Math.floor(Math.random() * 15))));
 
-    // Is the user predominantly happy?
-    const isUserHappy = happyCues > sadCues && stutterCount === 0 && backspaceCount < 6;
+    // SPECIAL CASE: "Smiling Depression" / Masked Sadness
+    // User appears to smile (mouth curved or mentions smile/happy/fine) BUT simultaneously displays dark circles,
+    // eye fatigue, messy hair, tired face, or expresses sadness/exhaustion in words.
+    const hasSmilingAppearance = happyCues > 0 || lowerText.includes('smile') || lowerText.includes('smiling') || lowerText.includes('good') || lowerText.includes('fine') || lowerText.includes('happy');
+    const hasUnderlyingFatigue = darkCirclesDetected || facialFatigue >= 45 || sadCues > 0 || 
+      lowerText.includes('tired') || lowerText.includes('exhausted') || lowerText.includes('messed') || 
+      lowerText.includes('messy') || lowerText.includes('fake') || lowerText.includes('pretend') || 
+      lowerText.includes('inside') || lowerText.includes('broken') || lowerText.includes('dark circle');
+
+    const isMaskedSadness = hasSmilingAppearance && hasUnderlyingFatigue;
+
+    // Genuine happiness is true ONLY if smiling without masked exhaustion markers
+    const isUserHappy = !isMaskedSadness && happyCues > sadCues && stutterCount === 0 && backspaceCount < 6;
 
     // Combined Distress Index
     let finalScore = Math.round(
@@ -543,7 +555,10 @@ export default function BiometricScanPage() {
       (cognitiveLoad * 0.2)
     );
 
-    if (isUserHappy) {
+    if (isMaskedSadness) {
+      // Elevate distress score appropriately (do NOT falsely lower it to 12!)
+      finalScore = Math.min(84, Math.max(68, Math.round(finalScore * 1.15) + (darkCirclesDetected ? 8 : 4)));
+    } else if (isUserHappy) {
       finalScore = Math.min(30, Math.max(12, Math.round(finalScore * 0.4)));
     } else {
       finalScore = Math.max(25, Math.min(100, finalScore));
@@ -560,7 +575,11 @@ export default function BiometricScanPage() {
 
     const name = profile.full_name?.split(' ')[0] || 'friend';
 
-    if (isUserHappy) {
+    if (isMaskedSadness) {
+      detectedReason = `Incongruent Affect ("Smiling Depression") Detected: Optical biometric tracking registered an outward smile, but detected pronounced periorbital fatigue, under-eye dark circle strain (${facialFatigue}%), and brow micro-tension. Looking closely at your tired face and eyes, our sensors recognize that you are putting on a brave smile while carrying a heavy emotional burden inside.`;
+      motivation = `${name}, I see that brave smile, but looking closely at your tired eyes, dark circles, and the fatigue on your face, I know how heavy things have been for you. You don't have to force a smile or pretend to be okay here. Wearing a mask for the world takes so much energy. You are safe here to let down your guard, breathe, and just rest. I am right here with you. 💚`;
+      compliment = `I deeply admire your courage and resilience, ${name}, but please remember: you don't always have to be the strong one. Your vulnerability is safe here.`;
+    } else if (isUserHappy) {
       detectedReason = `Optimal emotional baseline detected! Sensor analysis reveals balanced facial muscle tone, bright ocular posture (no dark-circle strain), clean vocal resonance without speech hesitation, and steady keystroke rhythm. High psychological resilience is evident.`;
       motivation = `Optimal emotional baseline! Your calm, positive vitality is contagious today. Carry this peaceful energy forward, and know that Dr. Saathi is always in your corner whenever you need a companion.`;
       compliment = `🌟 ${name}, you are truly shining today! Your authentic smile and calm energy reflect remarkable inner strength. Take a moment to celebrate how grounded and capable you are!`;
@@ -672,6 +691,7 @@ export default function BiometricScanPage() {
       stutterCount,
       cognitiveLoad,
       isUserHappy,
+      isMaskedSadness,
       detectedReason,
       motivation,
       compliment,
@@ -1000,6 +1020,23 @@ export default function BiometricScanPage() {
                     <h5 className="font-poppins font-bold text-sm text-[#3E6B63]">Doctor Saathi Compliment</h5>
                     <p className="text-xs sm:text-sm text-gray-700 mt-1 leading-relaxed font-medium">
                       {report.compliment}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Masked Sadness / Smiling Depression Alert Card */}
+              {report.isMaskedSadness && (
+                <div className="bg-gradient-to-r from-amber-50 to-orange-50 p-5 rounded-2xl border border-amber-300 flex items-start gap-3.5 shadow-sm">
+                  <div className="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-xs">
+                    <span className="text-xl">🎭</span>
+                  </div>
+                  <div>
+                    <h5 className="font-poppins font-bold text-sm text-amber-950 flex items-center gap-1.5">
+                      Masked Emotional Strain ("Smiling Depression")
+                    </h5>
+                    <p className="text-xs sm:text-sm text-amber-800 mt-1 leading-relaxed font-medium">
+                      Our biometric scanners detected an outward smile alongside ocular fatigue, under-eye dark circles, and somatic exhaustion. You don't have to force a smile or pretend to be okay here. You are safe to let down your guard.
                     </p>
                   </div>
                 </div>

@@ -383,6 +383,28 @@ Take a slow breath. You can choose a therapeutic focus above, tap a prompt start
           setStutterAlert(true);
         }
 
+        // Live Spoken Voice Stress & Sentiment Tracking
+        const lowerVoice = transcript.toLowerCase();
+        const sadVoiceKeywords = ['sad', 'depressed', 'tired', 'exhausted', 'stress', 'stressed', 'anxious', 'scared', 'crying', 'heavy', 'hurt', 'pain', 'lonely', 'hopeless', 'overwhelmed', 'pressure', 'dark', 'burnout'];
+        const crisisVoiceWords = ['kill myself', 'end it', 'die', 'harm myself', 'suicide'];
+        
+        let sadSpokenCues = 0;
+        sadVoiceKeywords.forEach(w => { if (lowerVoice.includes(w)) sadSpokenCues++; });
+
+        if (crisisVoiceWords.some(w => lowerVoice.includes(w))) {
+          setCurrentScore(88);
+          setCurrentTier('high');
+          setShowCrisisBanner(true);
+        } else if (sadSpokenCues > 0 || hasStutter) {
+          const updatedScore = Math.min(85, Math.max(currentScore ?? 35, 52 + (sadSpokenCues * 10) + (hasStutter ? 10 : 0)));
+          setCurrentScore(updatedScore);
+          setCurrentTier(updatedScore >= 75 ? 'high' : 'moderate');
+        } else if (['happy', 'great', 'awesome', 'good', 'joy', 'excited', 'calm', 'peaceful'].some(w => lowerVoice.includes(w))) {
+          const updatedScore = Math.max(15, Math.min(currentScore ?? 35, 30));
+          setCurrentScore(updatedScore);
+          setCurrentTier('low');
+        }
+
         setInputText(prev => prev ? prev + ' ' + transcript : transcript);
       };
 
