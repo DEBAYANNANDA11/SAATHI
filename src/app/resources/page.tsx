@@ -730,14 +730,20 @@ export default function ResourcesPage() {
                   </span>
 
                   <a
-                    href={`https://www.youtube.com/results?search_query=${encodeURIComponent(track.youtubeQuery)}`}
+                    href={`https://open.spotify.com/search/${encodeURIComponent(`${track.title} ${track.artist}`)}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="px-3 py-1.5 bg-[#8FCBB0] hover:bg-[#77bda0] text-[#142E27] rounded-xl text-xs font-bold transition-all shadow-xs flex items-center gap-1.5"
+                    onClick={() => {
+                      try {
+                        window.location.href = `spotify:search:${encodeURIComponent(`${track.title} ${track.artist}`)}`;
+                      } catch (e) {}
+                    }}
+                    className="px-3 py-1.5 bg-[#1DB954] hover:bg-[#1aa34a] text-white rounded-xl text-xs font-bold transition-all shadow-xs flex items-center gap-1.5 cursor-pointer"
+                    title="Open on Spotify"
                   >
                     <Play className="w-3 h-3 fill-current" />
-                    <span>Listen Now</span>
-                    <ExternalLink className="w-3 h-3 opacity-60" />
+                    <span>Open in Spotify</span>
+                    <ExternalLink className="w-3 h-3 opacity-80" />
                   </a>
                 </div>
               </div>

@@ -830,20 +830,20 @@ export default function BiometricScanPage() {
         motivation = `You are maintaining a steady, composed equilibrium, ${name}. Keep honoring your personal pace and taking restful micro-breaks as you navigate your day.`;
       }
 
-      // 5. Curated Multilingual Uplifting Songs
+      // 5. Curated Multilingual Uplifting Songs (Direct to Spotify)
       const songs = {
         english: [
           {
             title: "Better Days",
             artist: "OneRepublic",
             reason: "Uplifting tempo and reassuring lyrics to remind you that easier, brighter mornings are ahead.",
-            url: "https://www.youtube.com/results?search_query=OneRepublic+Better+Days"
+            url: "https://open.spotify.com/search/OneRepublic%20Better%20Days"
           },
           {
             title: "Here Comes the Sun",
             artist: "The Beatles",
             reason: "Warm, luminous acoustic harmonies that signal reassurance and emotional dawn after long hardship.",
-            url: "https://www.youtube.com/results?search_query=The+Beatles+Here+Comes+the+Sun"
+            url: "https://open.spotify.com/search/The%20Beatles%20Here%20Comes%20the%20Sun"
           }
         ],
         hindi: [
@@ -851,19 +851,19 @@ export default function BiometricScanPage() {
             title: "Love You Zindagi",
             artist: "Dear Zindagi (Amit Trivedi & Jasleen Royal)",
             reason: "Playful, light-hearted ode to embracing life with gentle acceptance, lightness, and self-compassion.",
-            url: "https://www.youtube.com/results?search_query=Love+You+Zindagi+Dear+Zindagi"
+            url: "https://open.spotify.com/search/Love%20You%20Zindagi%20Dear%20Zindagi"
           },
           {
             title: "Kun Faya Kun",
             artist: "Rockstar (A.R. Rahman, Mohit Chauhan, Javed Ali)",
             reason: "Deep, transcendent sufi frequencies that dissolve mental chaos and dark circles into spiritual peace.",
-            url: "https://www.youtube.com/results?search_query=Kun+Faya+Kun+Rockstar"
+            url: "https://open.spotify.com/search/Kun%20Faya%20Kun%20Rockstar"
           },
           {
             title: "Aashayein",
             artist: "Iqbal (KK)",
             reason: "Timeless anthem of resilience and human spirit to ignite courage when you feel completely drained.",
-            url: "https://www.youtube.com/results?search_query=Aashayein+KK+Iqbal"
+            url: "https://open.spotify.com/search/Aashayein%20KK%20Iqbal"
           }
         ],
         bengali: [
@@ -871,19 +871,19 @@ export default function BiometricScanPage() {
             title: "Majhe Majhe Tobo Dekha Pai",
             artist: "Rabindrasangeet (Arijit Singh / Somlata)",
             reason: "Soulful Rabindrasangeet bringing timeless grounding, tenderness, and meditative comfort.",
-            url: "https://www.youtube.com/results?search_query=Majhe+Majhe+Tobo+Dekha+Pai"
+            url: "https://open.spotify.com/search/Majhe%20Majhe%20Tobo%20Dekha%20Pai%20Arijit%20Singh"
           },
           {
             title: "Aalo Aalo",
             artist: "Joy Sarkar & Shaan",
             reason: "Brimming with morning warmth and optimism, dispelling heavy clouds of fatigue and despair.",
-            url: "https://www.youtube.com/results?search_query=Aalo+Aalo+Shaan+Joy+Sarkar"
+            url: "https://open.spotify.com/search/Aalo%20Aalo%20Shaan%20Joy%20Sarkar"
           },
           {
             title: "Ami Banglay Gaan Gai",
             artist: "Pratul Mukhopadhyay",
             reason: "Profoundly emotional melody providing a sense of home, identity, and inner belonging.",
-            url: "https://www.youtube.com/results?search_query=Ami+Banglay+Gaan+Gai"
+            url: "https://open.spotify.com/search/Ami%20Banglay%20Gaan%20Gai%20Pratul%20Mukhopadhyay"
           }
         ]
       };
@@ -940,7 +940,7 @@ export default function BiometricScanPage() {
               title: "Here Comes the Sun",
               artist: "The Beatles",
               reason: "Warm harmonies that signal emotional calm and light.",
-              url: "https://www.youtube.com/results?search_query=The+Beatles+Here+Comes+the+Sun"
+              url: "https://open.spotify.com/search/The%20Beatles%20Here%20Comes%20the%20Sun"
             }
           ],
           hindi: [
@@ -948,7 +948,7 @@ export default function BiometricScanPage() {
               title: "Love You Zindagi",
               artist: "Dear Zindagi",
               reason: "Light-hearted ode to self-compassion.",
-              url: "https://www.youtube.com/results?search_query=Love+You+Zindagi+Dear+Zindagi"
+              url: "https://open.spotify.com/search/Love%20You%20Zindagi%20Dear%20Zindagi"
             }
           ],
           bengali: [
@@ -956,7 +956,7 @@ export default function BiometricScanPage() {
               title: "Majhe Majhe Tobo Dekha Pai",
               artist: "Rabindrasangeet",
               reason: "Soulful timeless grounding and meditative comfort.",
-              url: "https://www.youtube.com/results?search_query=Majhe+Majhe+Tobo+Dekha+Pai"
+              url: "https://open.spotify.com/search/Majhe%20Majhe%20Tobo%20Dekha%20Pai%20Arijit%20Singh"
             }
           ]
         }
@@ -1486,17 +1486,24 @@ export default function BiometricScanPage() {
                       href={song.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="p-3.5 bg-gray-50 hover:bg-[#F2F8F5] border border-gray-200 hover:border-[#8FCBB0] rounded-xl flex items-start justify-between gap-3 transition-all group"
+                      onClick={() => {
+                        try {
+                          window.location.href = `spotify:search:${encodeURIComponent(`${song.title} ${song.artist}`)}`;
+                        } catch (e) {}
+                      }}
+                      className="p-3.5 bg-gray-50 hover:bg-[#F2F8F5] border border-gray-200 hover:border-[#1DB954] rounded-xl flex items-start justify-between gap-3 transition-all group cursor-pointer"
+                      title="Open in Spotify App"
                     >
                       <div className="flex flex-col gap-0.5">
                         <div className="flex items-center gap-1.5">
-                          <Headphones className="w-3.5 h-3.5 text-[#3E5FE0] shrink-0" />
-                          <span className="text-xs font-bold text-gray-800 group-hover:text-[#3E6B63] transition-colors">{song.title}</span>
+                          <Headphones className="w-3.5 h-3.5 text-[#1DB954] shrink-0" />
+                          <span className="text-xs font-bold text-gray-800 group-hover:text-[#1DB954] transition-colors">{song.title}</span>
+                          <span className="text-[9px] bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.5 rounded-full">Spotify</span>
                         </div>
                         <span className="text-[11px] font-semibold text-gray-500">{song.artist}</span>
                         <span className="text-[10px] text-gray-400 mt-1 leading-normal">{song.reason}</span>
                       </div>
-                      <ExternalLink className="w-3.5 h-3.5 text-gray-400 group-hover:text-[#3E6B63] shrink-0 mt-0.5" />
+                      <ExternalLink className="w-3.5 h-3.5 text-gray-400 group-hover:text-[#1DB954] shrink-0 mt-0.5" />
                     </a>
                   ))}
                 </div>
