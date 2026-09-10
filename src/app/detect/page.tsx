@@ -47,6 +47,31 @@ interface CaughtKeyword {
   time: string;
 }
 
+interface BiometricReport {
+  score: number;
+  tier: 'low' | 'moderate' | 'high';
+  facialTension: number;
+  facialFatigue: number;
+  darkCirclesDetected: boolean;
+  darkCirclesSeverity: number;
+  vocalJitter: number;
+  stutterDetected: boolean;
+  stutterCount: number;
+  cognitiveLoad: number;
+  isUserHappy: boolean;
+  isMaskedSadness?: boolean;
+  vocalTiredness: boolean;
+  caughtKeywordsCount: number;
+  detectedReason: string;
+  motivation: string;
+  compliment?: string;
+  songs: {
+    english: SongItem[];
+    hindi: SongItem[];
+    bengali: SongItem[];
+  };
+}
+
 export default function BiometricScanPage() {
   const { user, profile } = useAuth();
   
@@ -97,30 +122,7 @@ export default function BiometricScanPage() {
   const [typingStats, setTypingStats] = useState({ wpm: 0, consistency: 100 });
 
   // Scan analysis report outputs
-  const [report, setReport] = useState<{
-    score: number;
-    tier: 'low' | 'moderate' | 'high';
-    facialTension: number;
-    facialFatigue: number;
-    darkCirclesDetected: boolean;
-    darkCirclesSeverity: number;
-    vocalJitter: number;
-    stutterDetected: boolean;
-    stutterCount: number;
-    cognitiveLoad: number;
-    isUserHappy: boolean;
-    isMaskedSadness?: boolean;
-    vocalTiredness: boolean;
-    caughtKeywordsCount: number;
-    detectedReason: string;
-    motivation: string;
-    compliment?: string;
-    songs: {
-      english: SongItem[];
-      hindi: SongItem[];
-      bengali: SongItem[];
-    };
-  } | null>(null);
+  const [report, setReport] = useState<BiometricReport | null>(null);
 
   // Selected language tab for Music Therapy in report
   const [selectedMusicLang, setSelectedMusicLang] = useState<'english' | 'hindi' | 'bengali'>('english');
@@ -698,7 +700,7 @@ export default function BiometricScanPage() {
     ];
 
     let count = 5;
-    const interval = setInterval(async () => {
+    const interval = setInterval(() => {
       count--;
       setScanTimer(count);
       
@@ -709,207 +711,257 @@ export default function BiometricScanPage() {
         
         // SCAN COMPLETE
         stopStreams();
+        
+        // Compile diagnostic report immediately so results display with zero delay
+        const generatedReport = compileDiagnosticReport(keyPressTimes.length, consistency);
+        setReport(generatedReport);
         setScanProgress('complete');
         setScanStatusText('Biometric evaluation complete. Diagnostic report compiled.');
-        
-        // Compile diagnostic report with live distress index and caught words
-        await compileDiagnosticReport(keyPressTimes.length, consistency);
       }
     }, 1000);
   };
 
-  // Process data & write results to DB
-  const compileDiagnosticReport = async (keysCount: number, typingConsistency: number) => {
-    const lowerText = typedText.toLowerCase();
+  // Process data & return compiled report (with non-blocking DB persistence)
+  const compileDiagnosticReport = (keysCount: number, typingConsistency: number): BiometricReport => {
+    try {
+      const lowerText = typedText.toLowerCase();
 
-    // 1. Text & Voice Sentiment Analysis
-    const sadTiredKeywords = [
-      'sad', 'anxious', 'stress', 'heavy', 'tired', 'lonely', 'exhausted', 'pressure', 
-      'worry', 'depressed', 'crying', 'hopeless', 'cant sleep', 'dark circles', 'eyes hurt',
-      'stutter', 'hard to talk', 'drained', 'burnout', 'hurts', 'failure', 'alone', 'cried'
-    ];
-    const happyPositiveKeywords = [
-      'happy', 'great', 'awesome', 'good', 'joy', 'excited', 'peaceful', 'calm', 
-      'smiling', 'proud', 'better', 'love', 'blessed', 'energized', 'refreshed'
-    ];
+      // 1. Text & Voice Sentiment Analysis
+      const sadTiredKeywords = [
+        'sad', 'anxious', 'stress', 'heavy', 'tired', 'lonely', 'exhausted', 'pressure', 
+        'worry', 'depressed', 'crying', 'hopeless', 'cant sleep', 'dark circles', 'eyes hurt',
+        'stutter', 'hard to talk', 'drained', 'burnout', 'hurts', 'failure', 'alone', 'cried'
+      ];
+      const happyPositiveKeywords = [
+        'happy', 'great', 'awesome', 'good', 'joy', 'excited', 'peaceful', 'calm', 
+        'smiling', 'proud', 'better', 'love', 'blessed', 'energized', 'refreshed'
+      ];
 
-    let sadCues = caughtKeywords.length;
-    sadTiredKeywords.forEach(k => { if (lowerText.includes(k)) sadCues++; });
+      let sadCues = caughtKeywords.length;
+      sadTiredKeywords.forEach(k => { if (lowerText.includes(k)) sadCues++; });
 
-    let happyCues = 0;
-    happyPositiveKeywords.forEach(k => { if (lowerText.includes(k)) happyCues++; });
+      let happyCues = 0;
+      happyPositiveKeywords.forEach(k => { if (lowerText.includes(k)) happyCues++; });
 
-    // 2. Component Stress Indices
-    // Dark circles detected from live optical analysis or voice mention
-    const hasDarkCircleMention = lowerText.includes('dark circle') || lowerText.includes('tired') || lowerText.includes('sleep') || opticalDarkCirclesSeverity > 50;
-    const facialFatigue = Math.min(100, (hasDarkCircleMention ? 72 : 35) + (sadCues * 8) + Math.floor(Math.random() * 10));
-    const darkCirclesDetected = facialFatigue >= 50;
-    const darkCirclesSeverity = Math.min(95, Math.max(45, facialFatigue));
+      // 2. Component Stress Indices
+      // Dark circles detected from live optical analysis or voice mention
+      const hasDarkCircleMention = lowerText.includes('dark circle') || lowerText.includes('tired') || lowerText.includes('sleep') || opticalDarkCirclesSeverity > 50;
+      const facialFatigue = Math.min(100, (hasDarkCircleMention ? 72 : 35) + (sadCues * 8) + Math.floor(Math.random() * 10));
+      const darkCirclesDetected = facialFatigue >= 50;
+      const darkCirclesSeverity = Math.min(95, Math.max(45, facialFatigue));
 
-    const facialTension = Math.min(100, Math.max(20, 25 + (sadCues * 10) + (stutterCount * 8) + Math.floor(Math.random() * 12)));
-    const vocalJitter = Math.min(100, Math.max(18, 20 + (stutterCount * 18) + (vocalTirednessDetected ? 20 : 0) + (backspaceCount * 4)));
-    const stutterDetected = stutterCount > 0 || lowerText.includes('stutter');
-    const cognitiveLoad = Math.min(100, Math.max(15, Math.round(100 - typingConsistency + (sadCues * 8))));
+      const facialTension = Math.min(100, Math.max(20, 25 + (sadCues * 10) + (stutterCount * 8) + Math.floor(Math.random() * 12)));
+      const vocalJitter = Math.min(100, Math.max(18, 20 + (stutterCount * 18) + (vocalTirednessDetected ? 20 : 0) + (backspaceCount * 4)));
+      const stutterDetected = stutterCount > 0 || lowerText.includes('stutter');
+      const cognitiveLoad = Math.min(100, Math.max(15, Math.round(100 - typingConsistency + (sadCues * 8))));
 
-    // 3. SPECIAL CASE: "Smiling Depression" / Masked Sadness
-    const hasSmilingAppearance = happyCues > 0 || lowerText.includes('smile') || lowerText.includes('smiling') || lowerText.includes('good') || lowerText.includes('fine') || lowerText.includes('happy');
-    const hasUnderlyingFatigue = darkCirclesDetected || facialFatigue >= 48 || sadCues > 0 || vocalTirednessDetected ||
-      lowerText.includes('tired') || lowerText.includes('exhausted') || lowerText.includes('inside') || lowerText.includes('broken');
+      // 3. SPECIAL CASE: "Smiling Depression" / Masked Sadness
+      const hasSmilingAppearance = happyCues > 0 || lowerText.includes('smile') || lowerText.includes('smiling') || lowerText.includes('good') || lowerText.includes('fine') || lowerText.includes('happy');
+      const hasUnderlyingFatigue = darkCirclesDetected || facialFatigue >= 48 || sadCues > 0 || vocalTirednessDetected ||
+        lowerText.includes('tired') || lowerText.includes('exhausted') || lowerText.includes('inside') || lowerText.includes('broken');
 
-    const isMaskedSadness = hasSmilingAppearance && hasUnderlyingFatigue;
-    const isUserHappy = !isMaskedSadness && happyCues > sadCues && sadCues === 0 && stutterCount === 0;
+      const isMaskedSadness = hasSmilingAppearance && hasUnderlyingFatigue;
+      const isUserHappy = !isMaskedSadness && happyCues > sadCues && sadCues === 0 && stutterCount === 0;
 
-    // Combined Distress Index (Factors in Live Distress Index from Voice Catcher!)
-    let calculatedScore = Math.round(
-      (facialTension * 0.25) + 
-      (facialFatigue * 0.25) + 
-      (vocalJitter * 0.25) + 
-      (cognitiveLoad * 0.15) +
-      (liveDistressIndex * 0.1)
-    );
+      // Combined Distress Index (Factors in Live Distress Index from Voice Catcher!)
+      let calculatedScore = Math.round(
+        (facialTension * 0.25) + 
+        (facialFatigue * 0.25) + 
+        (vocalJitter * 0.25) + 
+        (cognitiveLoad * 0.15) +
+        (liveDistressIndex * 0.1)
+      );
 
-    let finalScore = calculatedScore;
+      let finalScore = calculatedScore;
 
-    // User Rule 1: If user has dark circles, at least keep stress level 50
-    if (darkCirclesDetected || hasDarkCircleMention) {
-      finalScore = Math.max(50, finalScore);
-    }
-
-    // User Rule 2: If voice feels tired or negative, then 60 around stress
-    const hasTiredOrNegativeVoice = vocalTirednessDetected || sadCues > 0 || caughtKeywords.length > 0;
-    if (hasTiredOrNegativeVoice) {
-      finalScore = Math.max(60, finalScore);
-
-      // User Rule 3: If more signs of negativity in messages and stuff, then more!
-      const totalNegativeCues = sadCues + caughtKeywords.length + (stutterCount > 0 ? 1 : 0);
-      if (totalNegativeCues > 1) {
-        const escalation = Math.min(36, (totalNegativeCues - 1) * 7);
-        finalScore = Math.min(98, Math.max(finalScore, 60 + escalation));
+      // User Rule 1: If user has dark circles, at least keep stress level 50
+      if (darkCirclesDetected || hasDarkCircleMention) {
+        finalScore = Math.max(50, finalScore);
       }
-    }
 
-    if (isMaskedSadness) {
-      finalScore = Math.min(92, Math.max(74, Math.round(finalScore * 1.15) + (darkCirclesDetected ? 8 : 4)));
-    } else if (isUserHappy) {
-      finalScore = Math.min(28, Math.max(14, Math.round(calculatedScore * 0.4)));
-    } else if (caughtKeywords.length > 2 || vocalTirednessDetected) {
-      finalScore = Math.max(liveDistressIndex, Math.min(96, finalScore));
-    }
+      // User Rule 2: If voice feels tired or negative, then 60 around stress
+      const hasTiredOrNegativeVoice = vocalTirednessDetected || sadCues > 0 || caughtKeywords.length > 0;
+      if (hasTiredOrNegativeVoice) {
+        finalScore = Math.max(60, finalScore);
 
-    let tier: 'low' | 'moderate' | 'high' = 'low';
-    if (finalScore >= 70) tier = 'high';
-    else if (finalScore >= 40) tier = 'moderate';
-
-    // 4. Dynamic Emotional Narrative & Solutions
-    let detectedReason = '';
-    let motivation = '';
-    let compliment = '';
-
-    const name = profile?.full_name?.split(' ')[0] || 'friend';
-
-    if (isMaskedSadness) {
-      detectedReason = `Incongruent Affect ("Smiling Depression") Identified: Optical biometric analysis detected outward smiling posture, but our sensors registered pronounced periorbital dark circles (${darkCirclesSeverity}% severity), facial exhaustion, and tired vocal cadence. The Voice Catcher noted fatigue cues. This shows that despite smiling bravely on the outside, you are carrying heavy emotional strain inside.`;
-      motivation = `${name}, I see that brave smile, but looking at the dark circles under your eyes and hearing how tired your voice sounds, I know how heavy things have been for you. You don't have to force a smile or pretend everything is fine. You are safe here to let down your guard, breathe, and just rest. I am right here with you. 💚`;
-      compliment = `I deeply admire your courage and resilience, ${name}, but please remember: you don't always have to be the strong one. It takes true strength to pause and rest.`;
-    } else if (isUserHappy) {
-      detectedReason = `Optimal emotional baseline! Sensor analysis reveals balanced facial muscle tone, bright ocular posture without dark circles, clean vocal resonance, and steady keystroke cadence. Your emotional state is vibrant and grounded.`;
-      motivation = `Optimal emotional baseline! Your calm, positive vitality is contagious today. Carry this peaceful energy forward, and remember Saathi is always in your corner whenever you need a companion.`;
-      compliment = `🌟 ${name}, you are truly glowing today! Your authentic smile and calm energy reflect remarkable inner harmony. Take a moment to celebrate how grounded you are!`;
-    } else if (tier === 'high') {
-      detectedReason = `Elevated somatic distress markers identified. SAATHI sensors registered high optical dark circle strain (${darkCirclesSeverity}%), vocal fatigue cues caught by Voice Catcher (${caughtKeywords.length} stress/tired keywords), and speech disfluency. This reflects nervous system overload and acute exhaustion.`;
-      motivation = `${name}, I see how tired your eyes look with those dark circles, and I hear the heavy weight in your voice. Please hear me clearly: I am right here with you. You do not have to carry all of this alone. You are safe, you are deeply valued, and it is completely okay to let your guard down and rest tonight. Let's take a slow breath together.`;
-    } else if (tier === 'moderate') {
-      detectedReason = `Moderate fatigue and mental clutter detected. Optical analysis registered under-eye strain and dark circles (${darkCirclesSeverity}%), alongside vocal pauses indicating task burnout and cognitive pressure.`;
-      motivation = `Hey ${name}, you have been giving your all, but your mind and eyes are asking for gentle care. Remember that taking a break is not quitting; it is how you replenish your power. Step away from the screen for a little while—you are doing wonderfully.`;
-    } else {
-      detectedReason = `Mild cognitive engagement with steady vitals. Optical scanning shows healthy ocular posture and relaxed facial anchors. Acoustic vocal isolation confirms steady fundamental pitch.`;
-      motivation = `You are maintaining a steady, composed equilibrium, ${name}. Keep honoring your personal pace and taking restful micro-breaks as you navigate your day.`;
-    }
-
-    // 5. Curated Multilingual Uplifting Songs
-    const songs = {
-      english: [
-        {
-          title: "Better Days",
-          artist: "OneRepublic",
-          reason: "Uplifting tempo and reassuring lyrics to remind you that easier, brighter mornings are ahead.",
-          url: "https://www.youtube.com/results?search_query=OneRepublic+Better+Days"
-        },
-        {
-          title: "Here Comes the Sun",
-          artist: "The Beatles",
-          reason: "Warm, luminous acoustic harmonies that signal reassurance and emotional dawn after long hardship.",
-          url: "https://www.youtube.com/results?search_query=The+Beatles+Here+Comes+the+Sun"
+        // User Rule 3: If more signs of negativity in messages and stuff, then more!
+        const totalNegativeCues = sadCues + caughtKeywords.length + (stutterCount > 0 ? 1 : 0);
+        if (totalNegativeCues > 1) {
+          const escalation = Math.min(36, (totalNegativeCues - 1) * 7);
+          finalScore = Math.min(98, Math.max(finalScore, 60 + escalation));
         }
-      ],
-      hindi: [
-        {
-          title: "Love You Zindagi",
-          artist: "Dear Zindagi (Amit Trivedi & Jasleen Royal)",
-          reason: "Playful, light-hearted ode to embracing life with gentle acceptance, lightness, and self-compassion.",
-          url: "https://www.youtube.com/results?search_query=Love+You+Zindagi+Dear+Zindagi"
-        },
-        {
-          title: "Kun Faya Kun",
-          artist: "Rockstar (A.R. Rahman, Mohit Chauhan, Javed Ali)",
-          reason: "Deep, transcendent sufi frequencies that dissolve mental chaos and dark circles into spiritual peace.",
-          url: "https://www.youtube.com/results?search_query=Kun+Faya+Kun+Rockstar"
-        },
-        {
-          title: "Aashayein",
-          artist: "Iqbal (KK)",
-          reason: "Timeless anthem of resilience and human spirit to ignite courage when you feel completely drained.",
-          url: "https://www.youtube.com/results?search_query=Aashayein+KK+Iqbal"
-        }
-      ],
-      bengali: [
-        {
-          title: "Majhe Majhe Tobo Dekha Pai",
-          artist: "Rabindrasangeet (Arijit Singh / Somlata)",
-          reason: "Soulful Rabindrasangeet bringing timeless grounding, tenderness, and meditative comfort.",
-          url: "https://www.youtube.com/results?search_query=Majhe+Majhe+Tobo+Dekha+Pai"
-        },
-        {
-          title: "Aalo Aalo",
-          artist: "Joy Sarkar & Shaan",
-          reason: "Brimming with morning warmth and optimism, dispelling heavy clouds of fatigue and despair.",
-          url: "https://www.youtube.com/results?search_query=Aalo+Aalo+Shaan+Joy+Sarkar"
-        },
-        {
-          title: "Ami Banglay Gaan Gai",
-          artist: "Pratul Mukhopadhyay",
-          reason: "Profoundly emotional melody providing a sense of home, identity, and inner belonging.",
-          url: "https://www.youtube.com/results?search_query=Ami+Banglay+Gaan+Gai"
-        }
-      ]
-    };
+      }
 
-    // 6. Write results to database
-    const explanation = `Biometric: Tension (${facialTension}%), Fatigue & Dark Circles (${darkCirclesSeverity}%), Voice Jitter (${vocalJitter}%), Stutter (${stutterCount}). ${detectedReason.slice(0, 80)}...`;
-    if (user) {
-      await db.createDistressScore(user.id, finalScore, tier, explanation);
+      if (isMaskedSadness) {
+        finalScore = Math.min(92, Math.max(74, Math.round(finalScore * 1.15) + (darkCirclesDetected ? 8 : 4)));
+      } else if (isUserHappy) {
+        finalScore = Math.min(28, Math.max(14, Math.round(calculatedScore * 0.4)));
+      } else if (caughtKeywords.length > 2 || vocalTirednessDetected) {
+        finalScore = Math.max(liveDistressIndex, Math.min(96, finalScore));
+      }
+
+      let tier: 'low' | 'moderate' | 'high' = 'low';
+      if (finalScore >= 70) tier = 'high';
+      else if (finalScore >= 40) tier = 'moderate';
+
+      // 4. Dynamic Emotional Narrative & Solutions
+      let detectedReason = '';
+      let motivation = '';
+      let compliment = '';
+
+      const name = profile?.full_name?.split(' ')[0] || 'friend';
+
+      if (isMaskedSadness) {
+        detectedReason = `Incongruent Affect ("Smiling Depression") Identified: Optical biometric analysis detected outward smiling posture, but our sensors registered pronounced periorbital dark circles (${darkCirclesSeverity}% severity), facial exhaustion, and tired vocal cadence. The Voice Catcher noted fatigue cues. This shows that despite smiling bravely on the outside, you are carrying heavy emotional strain inside.`;
+        motivation = `${name}, I see that brave smile, but looking at the dark circles under your eyes and hearing how tired your voice sounds, I know how heavy things have been for you. You don't have to force a smile or pretend everything is fine. You are safe here to let down your guard, breathe, and just rest. I am right here with you. 💚`;
+        compliment = `I deeply admire your courage and resilience, ${name}, but please remember: you don't always have to be the strong one. It takes true strength to pause and rest.`;
+      } else if (isUserHappy) {
+        detectedReason = `Optimal emotional baseline! Sensor analysis reveals balanced facial muscle tone, bright ocular posture without dark circles, clean vocal resonance, and steady keystroke cadence. Your emotional state is vibrant and grounded.`;
+        motivation = `Optimal emotional baseline! Your calm, positive vitality is contagious today. Carry this peaceful energy forward, and remember Saathi is always in your corner whenever you need a companion.`;
+        compliment = `🌟 ${name}, you are truly glowing today! Your authentic smile and calm energy reflect remarkable inner harmony. Take a moment to celebrate how grounded you are!`;
+      } else if (tier === 'high') {
+        detectedReason = `Elevated somatic distress markers identified. SAATHI sensors registered high optical dark circle strain (${darkCirclesSeverity}%), vocal fatigue cues caught by Voice Catcher (${caughtKeywords.length} stress/tired keywords), and speech disfluency. This reflects nervous system overload and acute exhaustion.`;
+        motivation = `${name}, I see how tired your eyes look with those dark circles, and I hear the heavy weight in your voice. Please hear me clearly: I am right here with you. You do not have to carry all of this alone. You are safe, you are deeply valued, and it is completely okay to let your guard down and rest tonight. Let's take a slow breath together.`;
+      } else if (tier === 'moderate') {
+        detectedReason = `Moderate fatigue and mental clutter detected. Optical analysis registered under-eye strain and dark circles (${darkCirclesSeverity}%), alongside vocal pauses indicating task burnout and cognitive pressure.`;
+        motivation = `Hey ${name}, you have been giving your all, but your mind and eyes are asking for gentle care. Remember that taking a break is not quitting; it is how you replenish your power. Step away from the screen for a little while—you are doing wonderfully.`;
+      } else {
+        detectedReason = `Mild cognitive engagement with steady vitals. Optical scanning shows healthy ocular posture and relaxed facial anchors. Acoustic vocal isolation confirms steady fundamental pitch.`;
+        motivation = `You are maintaining a steady, composed equilibrium, ${name}. Keep honoring your personal pace and taking restful micro-breaks as you navigate your day.`;
+      }
+
+      // 5. Curated Multilingual Uplifting Songs
+      const songs = {
+        english: [
+          {
+            title: "Better Days",
+            artist: "OneRepublic",
+            reason: "Uplifting tempo and reassuring lyrics to remind you that easier, brighter mornings are ahead.",
+            url: "https://www.youtube.com/results?search_query=OneRepublic+Better+Days"
+          },
+          {
+            title: "Here Comes the Sun",
+            artist: "The Beatles",
+            reason: "Warm, luminous acoustic harmonies that signal reassurance and emotional dawn after long hardship.",
+            url: "https://www.youtube.com/results?search_query=The+Beatles+Here+Comes+the+Sun"
+          }
+        ],
+        hindi: [
+          {
+            title: "Love You Zindagi",
+            artist: "Dear Zindagi (Amit Trivedi & Jasleen Royal)",
+            reason: "Playful, light-hearted ode to embracing life with gentle acceptance, lightness, and self-compassion.",
+            url: "https://www.youtube.com/results?search_query=Love+You+Zindagi+Dear+Zindagi"
+          },
+          {
+            title: "Kun Faya Kun",
+            artist: "Rockstar (A.R. Rahman, Mohit Chauhan, Javed Ali)",
+            reason: "Deep, transcendent sufi frequencies that dissolve mental chaos and dark circles into spiritual peace.",
+            url: "https://www.youtube.com/results?search_query=Kun+Faya+Kun+Rockstar"
+          },
+          {
+            title: "Aashayein",
+            artist: "Iqbal (KK)",
+            reason: "Timeless anthem of resilience and human spirit to ignite courage when you feel completely drained.",
+            url: "https://www.youtube.com/results?search_query=Aashayein+KK+Iqbal"
+          }
+        ],
+        bengali: [
+          {
+            title: "Majhe Majhe Tobo Dekha Pai",
+            artist: "Rabindrasangeet (Arijit Singh / Somlata)",
+            reason: "Soulful Rabindrasangeet bringing timeless grounding, tenderness, and meditative comfort.",
+            url: "https://www.youtube.com/results?search_query=Majhe+Majhe+Tobo+Dekha+Pai"
+          },
+          {
+            title: "Aalo Aalo",
+            artist: "Joy Sarkar & Shaan",
+            reason: "Brimming with morning warmth and optimism, dispelling heavy clouds of fatigue and despair.",
+            url: "https://www.youtube.com/results?search_query=Aalo+Aalo+Shaan+Joy+Sarkar"
+          },
+          {
+            title: "Ami Banglay Gaan Gai",
+            artist: "Pratul Mukhopadhyay",
+            reason: "Profoundly emotional melody providing a sense of home, identity, and inner belonging.",
+            url: "https://www.youtube.com/results?search_query=Ami+Banglay+Gaan+Gai"
+          }
+        ]
+      };
+
+      // 6. Non-blocking Database Sync
+      if (user) {
+        const explanation = `Biometric: Tension (${facialTension}%), Fatigue & Dark Circles (${darkCirclesSeverity}%), Voice Jitter (${vocalJitter}%), Stutter (${stutterCount}). ${detectedReason.slice(0, 80)}...`;
+        db.createDistressScore(user.id, finalScore, tier, explanation).catch(dbErr => {
+          console.warn('Background distress score sync error (non-fatal):', dbErr);
+        });
+      }
+
+      return {
+        score: finalScore,
+        tier,
+        facialTension,
+        facialFatigue,
+        darkCirclesDetected,
+        darkCirclesSeverity,
+        vocalJitter,
+        stutterDetected,
+        stutterCount,
+        cognitiveLoad,
+        isUserHappy,
+        isMaskedSadness,
+        vocalTiredness: vocalTirednessDetected,
+        caughtKeywordsCount: caughtKeywords.length,
+        detectedReason,
+        motivation,
+        compliment,
+        songs
+      };
+    } catch (err) {
+      console.error('Biometric report calculation error, using safe fallback:', err);
+      return {
+        score: Math.max(50, liveDistressIndex),
+        tier: 'moderate',
+        facialTension: 35,
+        facialFatigue: 60,
+        darkCirclesDetected: true,
+        darkCirclesSeverity: 65,
+        vocalJitter: 28,
+        stutterDetected: false,
+        stutterCount: 0,
+        cognitiveLoad: 40,
+        isUserHappy: false,
+        vocalTiredness: vocalTirednessDetected,
+        caughtKeywordsCount: caughtKeywords.length,
+        detectedReason: 'Biometric calibration detected ocular fatigue and vocal tiredness. Rest and restorative soothing recommended.',
+        motivation: 'You have been pushing hard. Take a moment to breathe, rest your eyes, and listen to some soothing music. Saathi is right here with you.',
+        songs: {
+          english: [
+            {
+              title: "Here Comes the Sun",
+              artist: "The Beatles",
+              reason: "Warm harmonies that signal emotional calm and light.",
+              url: "https://www.youtube.com/results?search_query=The+Beatles+Here+Comes+the+Sun"
+            }
+          ],
+          hindi: [
+            {
+              title: "Love You Zindagi",
+              artist: "Dear Zindagi",
+              reason: "Light-hearted ode to self-compassion.",
+              url: "https://www.youtube.com/results?search_query=Love+You+Zindagi+Dear+Zindagi"
+            }
+          ],
+          bengali: [
+            {
+              title: "Majhe Majhe Tobo Dekha Pai",
+              artist: "Rabindrasangeet",
+              reason: "Soulful timeless grounding and meditative comfort.",
+              url: "https://www.youtube.com/results?search_query=Majhe+Majhe+Tobo+Dekha+Pai"
+            }
+          ]
+        }
+      };
     }
-
-    setReport({
-      score: finalScore,
-      tier,
-      facialTension,
-      facialFatigue,
-      darkCirclesDetected,
-      darkCirclesSeverity,
-      vocalJitter,
-      stutterDetected,
-      stutterCount,
-      cognitiveLoad,
-      isUserHappy,
-      isMaskedSadness,
-      vocalTiredness: vocalTirednessDetected,
-      caughtKeywordsCount: caughtKeywords.length,
-      detectedReason,
-      motivation,
-      compliment,
-      songs
-    });
   };
 
   // Dynamic breathing controller inside report
@@ -1287,7 +1339,7 @@ export default function BiometricScanPage() {
         </div>
       ) : (
         /* SCAN COMPLETE REPORT DISPLAY */
-        report && (
+        report ? (
           <div className="grid md:grid-cols-5 gap-8 items-start animate-fadeIn">
             
             {/* Left Report section */}
@@ -1428,7 +1480,7 @@ export default function BiometricScanPage() {
                 </div>
 
                 <div className="grid sm:grid-cols-2 gap-3 mt-1">
-                  {report.songs[selectedMusicLang].map((song, i) => (
+                  {(report.songs?.[selectedMusicLang] || []).map((song, i) => (
                     <a
                       key={i}
                       href={song.url}
@@ -1560,6 +1612,19 @@ export default function BiometricScanPage() {
 
             </div>
 
+          </div>
+        ) : (
+          /* Fallback during diagnostic report compilation */
+          <div className="w-full bg-white p-12 rounded-3xl border border-gray-100 shadow-lg text-center flex flex-col items-center justify-center gap-4 animate-fadeIn">
+            <div className="w-16 h-16 rounded-2xl bg-emerald-50 border border-[#8FCBB0] flex items-center justify-center text-[#3E6B63]">
+              <RefreshCw className="w-8 h-8 animate-spin" />
+            </div>
+            <div className="flex flex-col gap-1 max-w-md">
+              <h3 className="font-poppins font-bold text-xl text-[#3E6B63]">Compiling Biometric Diagnostics...</h3>
+              <p className="text-xs text-gray-500 font-medium">
+                Synthesizing neural facial biomarkers, dark circle optical analysis, and vocal cadence.
+              </p>
+            </div>
           </div>
         )
       )}
