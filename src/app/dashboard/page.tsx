@@ -19,7 +19,8 @@ import {
   Activity,
   PhoneCall,
   RefreshCw,
-  Gamepad2
+  Gamepad2,
+  RotateCcw
 } from 'lucide-react';
 import { CopingSession } from '@/components/CopingSession';
 
@@ -31,6 +32,8 @@ export default function UserDashboard() {
   const [selectedMood, setSelectedMood] = useState<string | null>(null);
   const [savingCheckin, setSavingCheckin] = useState(false);
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
+  const [resetting, setResetting] = useState(false);
+  const [resetSuccess, setResetSuccess] = useState(false);
 
   // Companion Active Check-in States
   const [showHelpPrompt, setShowHelpPrompt] = useState(true);
@@ -99,13 +102,37 @@ export default function UserDashboard() {
           text: 'text-[#3E6B63]',
           bg: 'bg-emerald-50/50',
           border: 'border-emerald-100',
-          label: 'Optimal Well-being (Low)',
+          label: currentScore === 0 ? 'Completely Calm (Zero Stress)' : 'Optimal Well-being (Low)',
           colorHex: '#8FCBB0'
         };
     }
   };
 
   const colors = getTierColors(currentTier);
+
+  // Manually reset stress level back to 0
+  const handleResetStress = async () => {
+    if (!user) return;
+    setResetting(true);
+    setResetSuccess(false);
+    try {
+      const explanation = 'Stress level manually reset to 0. Optimal calm baseline restored.';
+      const newScore = await db.createDistressScore(user.id, 0, 'low', explanation);
+      setLatestScore(newScore);
+      setResetSuccess(true);
+      setTimeout(() => {
+        setResetSuccess(false);
+      }, 3500);
+    } catch (err: any) {
+      console.error('Failed to reset stress level:', err);
+      setMessage({
+        text: 'Failed to reset stress level. Please try again.',
+        type: 'error'
+      });
+    } finally {
+      setResetting(false);
+    }
+  };
 
   // Submit quick check-in
   const handleQuickCheckin = async (e: React.FormEvent) => {
@@ -353,6 +380,25 @@ export default function UserDashboard() {
             <span className={`block font-bold text-sm ${colors.text}`}>{colors.label}</span>
             <p className="text-xs text-gray-500 mt-1 leading-relaxed">{currentExplanation}</p>
           </div>
+
+          {/* Reset Stress Level to 0 Button */}
+          <button
+            type="button"
+            id="reset-stress-btn"
+            onClick={handleResetStress}
+            disabled={resetting}
+            className="w-full py-2.5 px-4 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-all duration-200 bg-emerald-50/70 hover:bg-emerald-100/80 text-[#1E4339] hover:text-[#142E27] border border-emerald-200/90 hover:border-[#8FCBB0] shadow-2xs hover:shadow-xs active:scale-[0.98] disabled:opacity-60 cursor-pointer"
+            title="Reset your stress level back to 0 baseline"
+          >
+            <RotateCcw className={`w-3.5 h-3.5 ${resetting ? 'animate-spin text-emerald-600' : 'text-[#3E6B63]'}`} />
+            <span>
+              {resetting 
+                ? 'Resetting to 0...' 
+                : resetSuccess 
+                ? '✓ Stress Level Reset to 0' 
+                : 'Reset Stress Level to 0'}
+            </span>
+          </button>
         </div>
 
         {/* MIDDLE COLUMN: CHECK-IN INPUT */}
