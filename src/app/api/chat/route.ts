@@ -136,6 +136,19 @@ Do you want to vent about what happened, or would you rather we just talk about 
 What's been the biggest thing on your mind today?`;
 }
 
+// In-memory cache for models that hit 429 quota limits (skip for 5 minutes to prevent wasted latency)
+const quotaBlockedModels = new Map<string, number>();
+
+// Helper to run a promise with a fast timeout (prevents hanging)
+function withTimeout<T>(promise: Promise<T>, ms: number, desc: string): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) =>
+      setTimeout(() => reject(new Error(`Timeout of ${ms}ms exceeded for ${desc}`)), ms)
+    ),
+  ]);
+}
+
 // ========================================================
 // API ROUTE HANDLER (Streaming Output)
 // ========================================================
@@ -153,30 +166,34 @@ export async function POST(req: Request) {
     console.log('[API /api/chat] Incoming request for client:', userName || 'Friend', '| Distress:', distressScore || 35);
     console.log('[API /api/chat] Key status:', apiKey ? `Present (length: ${apiKey.length}, prefix: "${apiKey.slice(0, 4)}...")` : 'EMPTY/UNDEFINED (Using offline clinical master engine)');
 
-    // 1. Live Google Gemini Engine (with Natural Companion System Prompt)
+    // 1. Live Google Gemini Engine (Prioritizing ultra-fast flash-lite)
     if (apiKey !== '') {
-      const candidateModels = ['gemini-2.5-flash', 'gemini-flash-latest', 'gemini-2.5-pro', 'gemini-1.5-flash'];
+      const candidateModels = ['gemini-flash-lite-latest', 'gemini-2.5-flash', 'gemini-flash-latest'];
+      const now = Date.now();
       const genAI = new GoogleGenerativeAI(apiKey);
 
       for (const modelName of candidateModels) {
+        // Skip models currently blocked by 429 quota (for 5 minutes)
+        const blockedUntil = quotaBlockedModels.get(modelName);
+        if (blockedUntil && blockedUntil > now) {
+          console.log(`[API /api/chat] Skipping "${modelName}" (quota blocked for another ${Math.round((blockedUntil - now) / 1000)}s)`);
+          continue;
+        }
+
         try {
-          console.log(`[API /api/chat] Attempting connection with Gemini model "${modelName}"...`);
+          console.log(`[API /api/chat] Attempting ultra-fast stream with Gemini model "${modelName}"...`);
           const model = genAI.getGenerativeModel({
             model: modelName,
             systemInstruction: MASTER_THERAPIST_SYSTEM_PROMPT,
             generationConfig: {
-              temperature: 0.8,
-              topP: 0.95,
-              maxOutputTokens: 350,
-              // Instant response: skip extended deliberation tokens
-              thinkingConfig: {
-                thinkingBudget: 0,
-              },
+              temperature: 0.7,
+              topP: 0.9,
+              maxOutputTokens: 220,
             } as any,
           });
 
-          // Format history (last 12 turns)
-          const recentMessages = messages.slice(-12);
+          // Format history (last 8 turns for high speed)
+          const recentMessages = messages.slice(-8);
           const formattedHistory = recentMessages.slice(0, -1).map((msg: any) => ({
             role: msg.role === 'user' ? 'user' : 'model',
             parts: [{ text: msg.content }],
@@ -187,20 +204,25 @@ export async function POST(req: Request) {
               {
                 role: 'user',
                 parts: [{
-                  text: `[Companion Parameters: Friend Name: ${userName || 'Friend'}. Current distress: ${distressScore || 35}/100. Directive: Talk naturally like a real, supportive best friend (like ChatGPT). Be casual, varied, empathetic, and comforting. DO NOT give unsolicited song lists, exercises, or food unless the user specifically asks for advice or recommendations. Keep replies punchy and warm.]`,
+                  text: `[Companion Parameters: Friend Name: ${userName || 'Friend'}. Current distress: ${distressScore || 35}/100. Directive: Talk naturally like a real, supportive best friend. Be casual, fast, empathetic, and comforting. Do NOT give unsolicited song lists, exercises, or food unless the user specifically asks. Keep replies punchy (40-80 words).]`,
                 }],
               },
               {
                 role: 'model',
                 parts: [{
-                  text: `Hey ${userName || 'friend'}! I'm Saathi, your true friend and companion. I'm right here with you to chat, listen, comfort you, or celebrate whenever you need me. You're never alone!`,
+                  text: `Hey ${userName || 'friend'}! I'm Saathi, your true friend. I'm right here with you!`,
                 }],
               },
               ...formattedHistory,
             ],
           });
 
-          const resultStream = await chatSession.sendMessageStream(lastUserMessage);
+          // 3500ms safety timeout: prevents hanging if a model is slow or stalls
+          const resultStream = await withTimeout(
+            chatSession.sendMessageStream(lastUserMessage),
+            3500,
+            `Gemini stream init (${modelName})`
+          );
           console.log(`[API /api/chat] Successfully opened stream with model "${modelName}". Streaming tokens...`);
 
           const encoder = new TextEncoder();
@@ -229,12 +251,19 @@ export async function POST(req: Request) {
             },
           });
         } catch (modelErr: any) {
-          console.warn(`[API /api/chat] Model "${modelName}" failed:`, modelErr?.message || modelErr);
+          const errMsg = modelErr?.message || String(modelErr);
+          console.warn(`[API /api/chat] Model "${modelName}" failed:`, errMsg.slice(0, 140));
+
+          // If quota exceeded (429), block this model for 5 minutes so subsequent chats don't lag
+          if (errMsg.includes('429') || errMsg.includes('Quota exceeded')) {
+            quotaBlockedModels.set(modelName, Date.now() + 5 * 60 * 1000);
+            console.warn(`[API /api/chat] Cached "${modelName}" as quota-blocked for 5 minutes.`);
+          }
         }
       }
     }
 
-    console.log('[API /api/chat] Serving High-EQ Clinical Master Engine fallback...');
+    console.log('[API /api/chat] Serving High-EQ Clinical Master Engine instant fallback...');
 
     // 2. High-EQ Solution-Focused Clinical Master Engine (Local Fallback)
     const masterResponse = generateClinicalMasterResponse(
@@ -245,7 +274,7 @@ export async function POST(req: Request) {
       modality
     );
 
-    // Stream the solution-oriented response chunk by chunk with high responsiveness (6 words per tick, 8ms delay)
+    // Stream the solution-oriented response chunk by chunk with high responsiveness (5 words per tick, 4ms delay)
     const encoder = new TextEncoder();
     const stream = new ReadableStream({
       async start(controller) {
@@ -254,10 +283,10 @@ export async function POST(req: Request) {
 
         for (let i = 0; i < words.length; i++) {
           buffer += (i === 0 ? '' : ' ') + words[i];
-          if (i % 6 === 0 || i === words.length - 1) {
+          if (i % 5 === 0 || i === words.length - 1) {
             controller.enqueue(encoder.encode(buffer));
             buffer = '';
-            await new Promise((resolve) => setTimeout(resolve, 8));
+            await new Promise((resolve) => setTimeout(resolve, 4));
           }
         }
         controller.close();
