@@ -28,7 +28,10 @@ import {
   Music,
   Eye,
   Shield,
-  Smile
+  Smile,
+  Star,
+  Layers,
+  ArrowUpRight
 } from 'lucide-react';
 
 export default function LandingPage() {
@@ -78,7 +81,7 @@ export default function LandingPage() {
     setTimeout(() => {
       setActiveScenarioIdx(index);
       setIsTyping(false);
-    }, 450);
+    }, 400);
   };
 
   // --- Interactive Breathing Widget State ---
@@ -92,7 +95,6 @@ export default function LandingPage() {
     const interval = setInterval(() => {
       setBreathCount((prev) => {
         if (prev > 1) return prev - 1;
-        // Phase transition
         setBreathPhase((current) => {
           if (current === 'Inhale') return 'Hold';
           if (current === 'Hold') return 'Exhale';
@@ -106,40 +108,154 @@ export default function LandingPage() {
   }, [isBreathingActive, breathPhase]);
 
   // --- Interactive Distress Tier Slider State ---
-  const [simulatedScore, setSimulatedScore] = useState(38);
+  const [simulatedScore, setSimulatedScore] = useState(48);
 
-  const getTierDetails = (score: number) => {
-    if (score <= 30) {
-      return {
-        label: 'Tier 1: Serene Baseline (Green)',
-        badgeClass: 'bg-emerald-100 text-emerald-800 border-emerald-300',
-        barColor: 'bg-emerald-500',
-        actionTitle: 'Empathetic Conversational Care',
-        actionDesc: 'Daily positive check-ins, gratitude journaling, curated acoustic Spotify playlists, and habit reinforcement.',
-        statusIcon: Smile,
-      };
-    } else if (score <= 65) {
-      return {
-        label: 'Tier 2: Moderate Fatigue / Stress (Yellow)',
-        badgeClass: 'bg-amber-100 text-amber-800 border-amber-300',
-        barColor: 'bg-amber-500',
-        actionTitle: 'Active De-Stress Intervention',
-        actionDesc: 'Facial dark circle fatigue alerts, Relief Arcade mini-games (Flappy Bird, Bot challenges), and guided 4-7-8 somatic breathing.',
-        statusIcon: Activity,
-      };
-    } else {
-      return {
-        label: 'Tier 3: Acute Distress / High Priority (Red)',
-        badgeClass: 'bg-rose-100 text-rose-800 border-rose-300',
-        barColor: 'bg-rose-500',
-        actionTitle: 'Immediate Safety & Counselor Escalation',
-        actionDesc: 'Warm crisis de-escalation protocol, instant confidential queue escalation to campus wellness officers, and 24/7 Tele-MANAS hotline button.',
-        statusIcon: Shield,
-      };
-    }
+  const getActiveTierIndex = (score: number) => {
+    if (score <= 30) return 0;
+    if (score <= 65) return 1;
+    return 2;
   };
 
-  const tierInfo = getTierDetails(simulatedScore);
+  const activeTierIdx = getActiveTierIndex(simulatedScore);
+
+  const protocolTiers = [
+    {
+      tierNum: 1,
+      name: 'Serene Baseline',
+      range: 'Score 0 – 30',
+      color: 'emerald',
+      borderClass: 'border-emerald-300 ring-2 ring-emerald-400/30',
+      badgeClass: 'bg-emerald-100 text-emerald-800 border-emerald-300',
+      bgActive: 'bg-emerald-50/70',
+      icon: Smile,
+      coreResponse: 'Compassionate Maintenance',
+      bullets: [
+        'Daily reflective AI check-in conversations',
+        'Private gratitude & mood logs with zero plaintext sharing',
+        'Curated calming acoustic & ambient Spotify playlists',
+        'Continuous gentle baseline tracking'
+      ],
+      alertStatus: 'No Clinical Alert Needed'
+    },
+    {
+      tierNum: 2,
+      name: 'Moderate Fatigue / Stress',
+      range: 'Score 31 – 65',
+      color: 'amber',
+      borderClass: 'border-amber-300 ring-2 ring-amber-400/30',
+      badgeClass: 'bg-amber-100 text-amber-800 border-amber-300',
+      bgActive: 'bg-amber-50/70',
+      icon: Activity,
+      coreResponse: 'Active Relief & Distraction',
+      bullets: [
+        'Dark circle & voice pitch exhaustion alerts',
+        'Relief Arcade distraction games (Flappy Bird, Bot vs User)',
+        'Guided 4-7-8 somatic breathing reset exercises',
+        'Prompted check-ins to prevent symptom escalation'
+      ],
+      alertStatus: 'Relief Arcade & Music Unlocked'
+    },
+    {
+      tierNum: 3,
+      name: 'Acute Distress / Urgent',
+      range: 'Score 66 – 100',
+      color: 'rose',
+      borderClass: 'border-rose-400 ring-2 ring-rose-500/40',
+      badgeClass: 'bg-rose-100 text-rose-800 border-rose-300',
+      bgActive: 'bg-rose-50/80',
+      icon: Shield,
+      coreResponse: 'Urgent Safety Escalation',
+      bullets: [
+        'Gentle, warm empathetic crisis de-escalation protocol',
+        'Confidential anonymized bridge to campus wellness officer queue',
+        'Direct one-tap 24/7 Tele-MANAS (14416) emergency connection',
+        'Optional encrypted emergency contact telephone dialer'
+      ],
+      alertStatus: 'Confidential Escalation Queue Active'
+    }
+  ];
+
+  // --- Feature Tabs Filter State ---
+  const [activeFeatureTab, setActiveFeatureTab] = useState<'all' | 'biometrics' | 'relief' | 'privacy'>('all');
+
+  const featureCards = [
+    {
+      id: 'vision',
+      category: 'biometrics',
+      title: 'Facial & Dark Circle Vision',
+      tag: '100% Local AI',
+      tagColor: 'bg-emerald-100 text-emerald-800',
+      icon: Camera,
+      iconColor: 'text-[#3E5FE0] bg-[#3E5FE0]/10',
+      description: 'Anonymous on-device computer vision detects sleep deprivation, dark circle pixel density, and eyelid fatigue without saving any frames to disk.',
+      linkHref: '/detect',
+      linkLabel: 'Test Biometric Vision'
+    },
+    {
+      id: 'voice',
+      category: 'biometrics',
+      title: 'Acoustic Voice Stress Catcher',
+      tag: 'Acoustic FFT',
+      tagColor: 'bg-[#3E5FE0]/10 text-[#3E5FE0]',
+      icon: Volume2,
+      iconColor: 'text-rose-600 bg-rose-500/10',
+      description: 'Evaluates vocal cadence, pitch jitter, and conversational hesitation to recognize signs of sadness, fatigue, or acute emotional strain.',
+      linkHref: '/detect',
+      linkLabel: 'Try Voice Catcher'
+    },
+    {
+      id: 'arcade',
+      category: 'relief',
+      title: 'Relief Arcade Distraction',
+      tag: '5+ Minigames',
+      tagColor: 'bg-amber-100 text-amber-800',
+      icon: Gamepad2,
+      iconColor: 'text-amber-600 bg-amber-500/10',
+      description: 'Break stressful rumination loops instantly with fun, engaging challenges like Flappy Bird, Bot vs User duels, and bubble pops.',
+      linkHref: '/arcade',
+      linkLabel: 'Play Relief Arcade'
+    },
+    {
+      id: 'chat',
+      category: 'relief',
+      title: 'Distress Analysis Chat',
+      tag: 'Ultra Fast AI',
+      tagColor: 'bg-indigo-100 text-indigo-800',
+      icon: MessageSquare,
+      iconColor: 'text-[#3E5FE0] bg-[#3E5FE0]/10',
+      description: 'Compassionate conversations that dynamically update distress level indices through subtle semantic flags and typing cadences.',
+      linkHref: '/chat',
+      linkLabel: 'Talk to Saathi'
+    },
+    {
+      id: 'journals',
+      category: 'privacy',
+      title: 'Private Safe Journals',
+      tag: 'End-to-End',
+      tagColor: 'bg-emerald-100 text-emerald-800',
+      icon: Heart,
+      iconColor: 'text-emerald-700 bg-emerald-600/10',
+      description: 'Uncensored personal sanctuary. Express your private thoughts freely with mood tracking, trigger tags, and guaranteed encryption.',
+      linkHref: '/journal',
+      linkLabel: 'Open Private Journal'
+    },
+    {
+      id: 'telemetry',
+      category: 'privacy',
+      title: 'Trend Telemetry & Escalation',
+      tag: '30-Day Curve',
+      tagColor: 'bg-[#EEF1FB] text-[#3E6B63]',
+      icon: LineChart,
+      iconColor: 'text-[#3E6B63] bg-[#3E6B63]/15',
+      description: 'Track your longitudinal mental wellness history with precise hover timestamps and safe multi-tier counselor bridge alerts.',
+      linkHref: '/history',
+      linkLabel: 'View History Curve'
+    }
+  ];
+
+  const filteredFeatures = activeFeatureTab === 'all' 
+    ? featureCards 
+    : featureCards.filter(f => f.category === activeFeatureTab);
 
   // --- Interactive FAQ Accordion State ---
   const [openFaq, setOpenFaq] = useState<number | null>(0);
@@ -172,13 +288,14 @@ export default function LandingPage() {
         <div className="absolute -bottom-20 right-1/4 w-96 h-96 bg-white/25 rounded-full blur-3xl animate-pulse-soft" />
       </div>
 
-      {/* ================= HERO SECTION ================= */}
+      {/* ================= HERO SECTION (SLIDE-IN ANIMATIONS) ================= */}
       <section className="max-w-7xl mx-auto px-6 pt-12 sm:pt-16 pb-20 grid lg:grid-cols-12 gap-12 items-center relative">
         
-        {/* Left Column: Headline & Pitch */}
-        <div className="lg:col-span-6 flex flex-col gap-6 text-center lg:text-left">
-          {/* Hackathon Pill */}
-          <div className="inline-flex items-center gap-2.5 px-4 py-2 self-center lg:self-start bg-white/85 backdrop-blur-md rounded-full text-xs sm:text-sm font-semibold text-[#142E27] shadow-sm border border-white/60 transition-all hover:scale-105">
+        {/* Left Column: Sliding Headline & Controls */}
+        <div className="lg:col-span-6 flex flex-col gap-6 text-center lg:text-left animate-slide-in-left">
+          
+          {/* Hackathon Pill with Slide-in Down */}
+          <div className="inline-flex items-center gap-2.5 px-4 py-2 self-center lg:self-start bg-white/85 backdrop-blur-md rounded-full text-xs sm:text-sm font-semibold text-[#142E27] shadow-sm border border-white/60 transition-all hover:scale-105 animate-slide-in-down">
             <span className="relative flex h-2.5 w-2.5">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-600"></span>
@@ -202,32 +319,32 @@ export default function LandingPage() {
           </h1>
           
           {/* Subtitle */}
-          <p className="text-[#1E4339] text-base sm:text-lg leading-relaxed max-w-xl font-medium">
-            SAATHI unites fast, empathetic AI conversations with passive multi-modal telemetry — sensing subtle typing rhythms, vocal fatigue, and facial strain to catch mental distress before it escalates.
+          <p className="text-[#1E4339] text-base sm:text-lg leading-relaxed max-w-xl font-medium animate-fadeIn">
+            SAATHI combines responsive conversational AI with subtle typing cadence, acoustic voice strain analysis, and non-intrusive facial fatigue vision to detect early distress — connecting you to support when it matters most.
           </p>
 
-          {/* Quick Feature Badges */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs font-semibold text-[#142E27]">
-            <div className="flex items-center gap-1.5 p-2 bg-white/65 rounded-xl backdrop-blur-xs border border-white/40">
+          {/* Quick Feature Badges in Card Format */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs font-semibold text-[#142E27] animate-slide-in-up">
+            <div className="flex items-center gap-1.5 p-2.5 bg-white/70 rounded-xl backdrop-blur-xs border border-white/50 shadow-xs transition-transform hover:-translate-y-0.5">
               <Volume2 className="w-3.5 h-3.5 text-[#3E5FE0]" />
               <span>Voice Catcher</span>
             </div>
-            <div className="flex items-center gap-1.5 p-2 bg-white/65 rounded-xl backdrop-blur-xs border border-white/40">
+            <div className="flex items-center gap-1.5 p-2.5 bg-white/70 rounded-xl backdrop-blur-xs border border-white/50 shadow-xs transition-transform hover:-translate-y-0.5">
               <Camera className="w-3.5 h-3.5 text-[#3E6B63]" />
               <span>Fatigue Scan</span>
             </div>
-            <div className="flex items-center gap-1.5 p-2 bg-white/65 rounded-xl backdrop-blur-xs border border-white/40">
+            <div className="flex items-center gap-1.5 p-2.5 bg-white/70 rounded-xl backdrop-blur-xs border border-white/50 shadow-xs transition-transform hover:-translate-y-0.5">
               <Gamepad2 className="w-3.5 h-3.5 text-[#3E5FE0]" />
               <span>Relief Arcade</span>
             </div>
-            <div className="flex items-center gap-1.5 p-2 bg-white/65 rounded-xl backdrop-blur-xs border border-white/40">
+            <div className="flex items-center gap-1.5 p-2.5 bg-white/70 rounded-xl backdrop-blur-xs border border-white/50 shadow-xs transition-transform hover:-translate-y-0.5">
               <ShieldCheck className="w-3.5 h-3.5 text-emerald-700" />
               <span>100% Private</span>
             </div>
           </div>
 
-          {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mt-3">
+          {/* CTA Action Buttons */}
+          <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mt-2 animate-slide-in-up">
             {user ? (
               <Link
                 href="/dashboard"
@@ -260,15 +377,15 @@ export default function LandingPage() {
                 const el = document.getElementById('breathing-widget');
                 el?.scrollIntoView({ behavior: 'smooth' });
               }}
-              className="inline-flex items-center justify-center gap-2 px-5 py-3.5 bg-white/40 hover:bg-white/70 text-[#142E27] font-medium rounded-2xl transition-all border border-white/40 text-sm"
+              className="inline-flex items-center justify-center gap-2 px-5 py-3.5 bg-white/40 hover:bg-white/75 text-[#142E27] font-semibold rounded-2xl transition-all border border-white/50 text-sm"
             >
               <Heart className="w-4 h-4 text-rose-500 fill-rose-500" />
               Try 30-Sec Pause
             </button>
           </div>
 
-          {/* Trust Guarantee */}
-          <div className="flex items-center justify-center lg:justify-start gap-4 pt-2 text-xs text-[#1E4339] font-medium">
+          {/* Student Trust Footer */}
+          <div className="flex items-center justify-center lg:justify-start gap-4 pt-1 text-xs text-[#1E4339] font-medium">
             <div className="flex -space-x-2">
               <span className="inline-block h-7 w-7 rounded-full ring-2 ring-[#8FCBB0] bg-indigo-500 text-white flex items-center justify-center text-[10px] font-bold">AN</span>
               <span className="inline-block h-7 w-7 rounded-full ring-2 ring-[#8FCBB0] bg-emerald-500 text-white flex items-center justify-center text-[10px] font-bold">RK</span>
@@ -278,19 +395,19 @@ export default function LandingPage() {
           </div>
         </div>
 
-        {/* Right Column: Interactive Live Hero Mockup */}
-        <div className="lg:col-span-6 relative flex justify-center items-center">
-          {/* Subtle Backing Halo */}
+        {/* Right Column: Hero Visual Mockup Card (Slide-In Right) */}
+        <div className="lg:col-span-6 relative flex justify-center items-center animate-slide-in-right">
           <div className="absolute inset-0 bg-[#3E5FE0]/15 blur-3xl rounded-full transform scale-90 -z-10" />
 
-          <div className="bg-white p-6 sm:p-7 rounded-3xl shadow-2xl border border-white/70 max-w-lg w-full relative overflow-hidden transition-all duration-500 hover:shadow-3xl">
+          {/* Main Hero Visual Card Format */}
+          <div className="bg-white p-6 sm:p-7 rounded-3xl shadow-2xl border border-white/80 max-w-lg w-full relative overflow-hidden transition-all duration-500">
             
-            {/* Top Bar of Mockup */}
+            {/* Top Bar of Mockup Card */}
             <div className="flex justify-between items-center pb-4 border-b border-[#EEF1FB] mb-5">
               <div className="flex items-center gap-2.5">
                 <Logo size={32} showText />
-                <span className="hidden sm:inline-block text-[11px] font-bold text-[#3E5FE0] bg-[#3E5FE0]/10 px-2 py-0.5 rounded-full">
-                  Interactive Demo
+                <span className="hidden sm:inline-block text-[11px] font-bold text-[#3E5FE0] bg-[#3E5FE0]/10 px-2.5 py-0.5 rounded-full">
+                  Interactive Card Demo
                 </span>
               </div>
               <div className="flex items-center gap-2">
@@ -304,10 +421,10 @@ export default function LandingPage() {
               </div>
             </div>
 
-            {/* Interactive Scenario Pills */}
+            {/* Interactive Scenario Card Switchers */}
             <div className="mb-4">
               <div className="text-[11px] font-bold uppercase tracking-wider text-gray-600 mb-2 flex items-center justify-between">
-                <span>Select a scenario to test AI:</span>
+                <span>Select scenario to test AI:</span>
                 <span className="text-[#3E5FE0] flex items-center gap-1 font-semibold">
                   <Sparkles className="w-3 h-3" /> Live simulation
                 </span>
@@ -331,9 +448,9 @@ export default function LandingPage() {
             </div>
 
             {/* Chat Messages */}
-            <div className="space-y-3.5 min-h-[175px] flex flex-col justify-end">
+            <div className="space-y-3.5 min-h-[170px] flex flex-col justify-end">
               {/* User message */}
-              <div className="flex gap-2.5 items-start justify-end">
+              <div className="flex gap-2.5 items-start justify-end animate-fadeIn">
                 <div className="bg-[#3E5FE0] text-white p-3.5 rounded-2xl rounded-tr-none text-sm max-w-[85%] shadow-sm leading-relaxed">
                   {currentScenario.userMessage}
                 </div>
@@ -358,7 +475,7 @@ export default function LandingPage() {
               </div>
             </div>
 
-            {/* Live Distress Telemetry Breakdown */}
+            {/* Live Distress Telemetry Footer Bar */}
             <div className="mt-5 pt-4 border-t border-[#EEF1FB] space-y-2.5">
               <div className="flex items-center justify-between text-xs">
                 <span className="font-semibold text-gray-500 flex items-center gap-1.5">
@@ -370,7 +487,7 @@ export default function LandingPage() {
                 </span>
               </div>
 
-              {/* Progress Bar */}
+              {/* Dynamic Score Bar */}
               <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
                 <div 
                   className={`h-full transition-all duration-700 ${
@@ -395,9 +512,72 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ================= INTERACTIVE 30-SEC MINDFUL BREATH WIDGET ================= */}
-      <section id="breathing-widget" className="max-w-4xl mx-auto px-6 py-10 w-full">
-        <div className="bg-white/90 backdrop-blur-md p-8 rounded-3xl shadow-xl border border-white/80 flex flex-col md:flex-row items-center justify-between gap-8 relative overflow-hidden">
+      {/* ================= 3-STEP "HOW SAATHI WORKS" JOURNEY CARDS FORMAT ================= */}
+      <section className="max-w-6xl mx-auto px-6 py-8 w-full animate-slide-in-up">
+        <div className="text-center max-w-2xl mx-auto mb-10">
+          <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/70 rounded-full text-xs font-bold text-[#142E27] mb-2 shadow-2xs">
+            <Layers className="w-3.5 h-3.5 text-[#3E5FE0]" />
+            <span>Telemetry Architecture</span>
+          </div>
+          <h2 className="font-poppins font-bold text-2xl sm:text-3xl text-[#142E27]">
+            How SAATHI Works in 3 Continuous Steps
+          </h2>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-6">
+          {/* Journey Card 01 */}
+          <div className="bg-white/90 backdrop-blur-xs p-6 rounded-3xl border border-white shadow-sm flex flex-col gap-3 transition-transform hover:-translate-y-1">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-black px-2.5 py-1 rounded-xl bg-[#3E5FE0]/10 text-[#3E5FE0]">
+                STEP 01
+              </span>
+              <Camera className="w-5 h-5 text-[#3E6B63]" />
+            </div>
+            <h3 className="font-poppins font-bold text-lg text-[#142E27]">
+              Unobtrusive Sensing
+            </h3>
+            <p className="text-gray-600 text-xs sm:text-sm leading-relaxed">
+              Passive detection monitors typing rhythm, acoustic pitch variations, and dark circle fatigue directly in browser memory.
+            </p>
+          </div>
+
+          {/* Journey Card 02 */}
+          <div className="bg-white/90 backdrop-blur-xs p-6 rounded-3xl border border-white shadow-sm flex flex-col gap-3 transition-transform hover:-translate-y-1">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-black px-2.5 py-1 rounded-xl bg-[#3E5FE0]/10 text-[#3E5FE0]">
+                STEP 02
+              </span>
+              <Brain className="w-5 h-5 text-[#3E5FE0]" />
+            </div>
+            <h3 className="font-poppins font-bold text-lg text-[#142E27]">
+              Zero-Knowledge Triage
+            </h3>
+            <p className="text-gray-600 text-xs sm:text-sm leading-relaxed">
+              Our clinical scoring model calculates a real-time Distress Index (0 to 100) and categorizes into 3 safety action tiers.
+            </p>
+          </div>
+
+          {/* Journey Card 03 */}
+          <div className="bg-white/90 backdrop-blur-xs p-6 rounded-3xl border border-white shadow-sm flex flex-col gap-3 transition-transform hover:-translate-y-1">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-black px-2.5 py-1 rounded-xl bg-[#3E5FE0]/10 text-[#3E5FE0]">
+                STEP 03
+              </span>
+              <Heart className="w-5 h-5 text-rose-500" />
+            </div>
+            <h3 className="font-poppins font-bold text-lg text-[#142E27]">
+              Tailored Intervention
+            </h3>
+            <p className="text-gray-600 text-xs sm:text-sm leading-relaxed">
+              Instantly unlocks the Relief Arcade, guided breathing, or bridges high-distress students directly to campus counselors.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* ================= INTERACTIVE 30-SEC MINDFUL BREATH WIDGET CARD ================= */}
+      <section id="breathing-widget" className="max-w-5xl mx-auto px-6 py-10 w-full animate-slide-in-up">
+        <div className="bg-white p-8 rounded-3xl shadow-xl border border-white flex flex-col md:flex-row items-center justify-between gap-8 relative overflow-hidden">
           <div className="flex-1 text-center md:text-left">
             <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#8FCBB0]/30 rounded-full text-xs font-bold text-[#142E27] mb-3">
               <Heart className="w-3.5 h-3.5 text-rose-500 fill-rose-500" />
@@ -407,7 +587,7 @@ export default function LandingPage() {
               Take a 30-Second Micro-Pause
             </h2>
             <p className="text-[#1E4339] text-sm sm:text-base mt-2 leading-relaxed">
-              Feeling overwhelmed right now? Sync your breathing with SAATHI’s interactive rhythm to balance your autonomic nervous system.
+              Feeling overwhelmed right now? Sync your breathing with SAATHI’s interactive rhythm to re-balance your autonomic nervous system.
             </p>
             <div className="mt-5 flex items-center justify-center md:justify-start gap-4">
               <button
@@ -465,10 +645,10 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ================= INTERACTIVE 3-TIER DISTRESS SLIDER (PS 94) ================= */}
-      <section className="max-w-6xl mx-auto px-6 py-16 w-full">
+      {/* ================= INTERACTIVE 3-TIER ESCALATION CARDS FORMAT (PS 94) ================= */}
+      <section className="max-w-6xl mx-auto px-6 py-14 w-full animate-slide-in-up">
         <div className="bg-white p-8 sm:p-10 rounded-3xl shadow-xl border border-gray-100 relative">
-          <div className="text-center max-w-2xl mx-auto mb-10">
+          <div className="text-center max-w-2xl mx-auto mb-8">
             <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#EEF1FB] text-[#3E5FE0] rounded-full text-xs font-bold mb-3">
               <Zap className="w-3.5 h-3.5" />
               <span>Smart India Hackathon Core Architecture</span>
@@ -477,7 +657,7 @@ export default function LandingPage() {
               Dynamic 3-Tier Escalation Protocol
             </h2>
             <p className="text-gray-600 text-sm sm:text-base mt-2">
-              Slide the distress scale below to see how SAATHI dynamically transitions safety interventions.
+              Slide the distress scale or click directly on any card below to see how SAATHI adapts safety protocols.
             </p>
           </div>
 
@@ -500,74 +680,111 @@ export default function LandingPage() {
               <button
                 type="button"
                 onClick={() => setSimulatedScore(15)}
-                className="px-3 py-1 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-lg text-xs font-semibold hover:bg-emerald-100"
+                className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
+                  activeTierIdx === 0 
+                    ? 'bg-emerald-600 text-white shadow-xs' 
+                    : 'bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100'
+                }`}
               >
                 Set Serene (15)
               </button>
               <button
                 type="button"
                 onClick={() => setSimulatedScore(48)}
-                className="px-3 py-1 bg-amber-50 text-amber-800 border border-amber-200 rounded-lg text-xs font-semibold hover:bg-amber-100"
+                className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
+                  activeTierIdx === 1 
+                    ? 'bg-amber-600 text-white shadow-xs' 
+                    : 'bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100'
+                }`}
               >
                 Set Moderate (48)
               </button>
               <button
                 type="button"
                 onClick={() => setSimulatedScore(85)}
-                className="px-3 py-1 bg-rose-50 text-rose-800 border border-rose-200 rounded-lg text-xs font-semibold hover:bg-rose-100"
+                className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
+                  activeTierIdx === 2 
+                    ? 'bg-rose-600 text-white shadow-xs' 
+                    : 'bg-rose-50 text-rose-800 border border-rose-200 hover:bg-rose-100'
+                }`}
               >
                 Set High Distress (85)
               </button>
             </div>
           </div>
 
-          {/* Active Tier Dynamic Card */}
-          <div className="bg-[#F2F8F5] p-6 sm:p-7 rounded-2xl border border-[#3E6B63]/20 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 transition-all duration-300">
-            <div className="flex-1 space-y-2">
-              <div className="flex items-center gap-3">
-                <span className={`px-3 py-1 rounded-full text-xs font-bold border ${tierInfo.badgeClass}`}>
-                  {tierInfo.label}
-                </span>
-                <span className="text-xs font-semibold text-gray-500">
-                  Calculated Index: <strong className="text-[#142E27]">{simulatedScore}/100</strong>
-                </span>
-              </div>
-              <h3 className="font-poppins font-bold text-xl text-[#142E27]">
-                {tierInfo.actionTitle}
-              </h3>
-              <p className="text-gray-700 text-sm leading-relaxed max-w-2xl">
-                {tierInfo.actionDesc}
-              </p>
-            </div>
+          {/* 3-CARD PROTOCOL DECK FORMAT */}
+          <div className="grid md:grid-cols-3 gap-6 pt-2">
+            {protocolTiers.map((tier, idx) => {
+              const isActive = activeTierIdx === idx;
+              const IconComponent = tier.icon;
+              return (
+                <div
+                  key={tier.tierNum}
+                  onClick={() => {
+                    if (idx === 0) setSimulatedScore(15);
+                    if (idx === 1) setSimulatedScore(48);
+                    if (idx === 2) setSimulatedScore(85);
+                  }}
+                  className={`p-6 rounded-3xl border transition-all duration-300 flex flex-col justify-between cursor-pointer ${
+                    isActive
+                      ? `${tier.bgActive} ${tier.borderClass} shadow-xl scale-102 -translate-y-1`
+                      : 'bg-[#F2F8F5]/70 border-gray-200/70 hover:bg-white hover:border-gray-300 opacity-80'
+                  }`}
+                >
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${tier.badgeClass}`}>
+                        {tier.range}
+                      </span>
+                      {isActive && (
+                        <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#142E27] text-white animate-pulse">
+                          Active Tier
+                        </span>
+                      )}
+                    </div>
 
-            <div className="shrink-0 flex items-center gap-3">
-              {simulatedScore <= 30 && (
-                <div className="px-4 py-3 bg-emerald-100/70 text-emerald-900 rounded-xl text-xs font-bold flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-700" />
-                  No Counselor Alert Needed
+                    <div className="flex items-center gap-2.5">
+                      <div className="p-2 rounded-xl bg-white shadow-2xs">
+                        <IconComponent className="w-5 h-5 text-[#3E6B63]" />
+                      </div>
+                      <div>
+                        <h4 className="font-poppins font-bold text-base text-[#142E27]">
+                          {tier.name}
+                        </h4>
+                        <span className="text-xs text-gray-500 font-medium">
+                          {tier.coreResponse}
+                        </span>
+                      </div>
+                    </div>
+
+                    <ul className="space-y-2 pt-2 text-xs text-gray-700">
+                      {tier.bullets.map((b, bIdx) => (
+                        <li key={bIdx} className="flex items-start gap-2">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
+                          <span>{b}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div className="mt-5 pt-3 border-t border-gray-200/60 text-center">
+                    <span className="text-[11px] font-bold text-[#142E27]">
+                      {tier.alertStatus}
+                    </span>
+                  </div>
                 </div>
-              )}
-              {simulatedScore > 30 && simulatedScore <= 65 && (
-                <div className="px-4 py-3 bg-amber-100/80 text-amber-900 rounded-xl text-xs font-bold flex items-center gap-2">
-                  <Gamepad2 className="w-4 h-4 text-amber-700" />
-                  Relief Arcade & Spotify Unlocked
-                </div>
-              )}
-              {simulatedScore > 65 && (
-                <div className="px-4 py-3 bg-rose-600 text-white rounded-xl text-xs font-bold flex items-center gap-2 shadow-lg animate-pulse">
-                  <Shield className="w-4 h-4" />
-                  Confidential Escalation Active
-                </div>
-              )}
-            </div>
+              );
+            })}
           </div>
         </div>
       </section>
 
-      {/* ================= 6-PILLAR FEATURE SUITE ================= */}
-      <section className="bg-white border-t border-[#EEF1FB] py-20 px-6">
+      {/* ================= CATEGORIZED FEATURE CARDS DECK FORMAT ================= */}
+      <section className="bg-white border-t border-[#EEF1FB] py-20 px-6 animate-slide-in-up">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center max-w-2xl mx-auto mb-16">
+          
+          <div className="text-center max-w-2xl mx-auto mb-10">
             <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#EEF1FB] text-[#3E5FE0] rounded-full text-xs font-bold mb-3">
               <Sparkles className="w-3.5 h-3.5" />
               <span>Full Spectrum Telemetry</span>
@@ -576,127 +793,192 @@ export default function LandingPage() {
               A non-intrusive, supportive ecosystem
             </h2>
             <p className="text-gray-500 mt-3 text-base">
-              SAATHI seamlessly weaves passive biometric indicators and fun therapeutic diversions into a privacy-first web sanctuary.
+              SAATHI seamlessly weaves passive biometric indicators and fun therapeutic diversions into a privacy-first sanctuary.
             </p>
           </div>
 
+          {/* Cards Category Filter Tabs */}
+          <div className="flex justify-center mb-10">
+            <div className="inline-flex p-1.5 bg-[#EEF1FB]/70 rounded-2xl border border-[#EEF1FB] gap-1 max-w-full overflow-x-auto">
+              <button
+                type="button"
+                onClick={() => setActiveFeatureTab('all')}
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+                  activeFeatureTab === 'all' 
+                    ? 'bg-white text-[#142E27] shadow-sm' 
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                All Capabilities
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveFeatureTab('biometrics')}
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+                  activeFeatureTab === 'biometrics' 
+                    ? 'bg-white text-[#142E27] shadow-sm' 
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                Biometric Vision & Voice 👁️
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveFeatureTab('relief')}
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+                  activeFeatureTab === 'relief' 
+                    ? 'bg-white text-[#142E27] shadow-sm' 
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                Relief Arcade & Therapy 🎮
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveFeatureTab('privacy')}
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+                  activeFeatureTab === 'privacy' 
+                    ? 'bg-white text-[#142E27] shadow-sm' 
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                Privacy & Care 🛡️
+              </button>
+            </div>
+          </div>
+
+          {/* Feature Cards Grid Format */}
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            
-            {/* Feature 1: Biometric Face Vision */}
-            <div className="p-7 bg-[#F2F8F5] border border-[#3E6B63]/15 rounded-3xl flex flex-col gap-4 transition-all duration-300 hover:shadow-xl group">
-              <div className="flex items-center justify-between">
-                <div className="w-13 h-13 bg-[#3E5FE0]/10 text-[#3E5FE0] rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110">
-                  <Camera className="w-6 h-6" />
-                </div>
-                <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
-                  100% Local AI
-                </span>
-              </div>
-              <h3 className="font-poppins font-bold text-lg text-[#142E27]">
-                Facial & Dark Circle Vision
-              </h3>
-              <p className="text-gray-600 text-sm leading-relaxed">
-                Anonymous on-device computer vision detects sleep deprivation, dark circle pixel density, and eyelid fatigue without saving any frames to disk.
-              </p>
-            </div>
+            {filteredFeatures.map((f) => {
+              const IconComp = f.icon;
+              return (
+                <div 
+                  key={f.id}
+                  className="p-7 bg-[#F2F8F5] border border-[#3E6B63]/15 rounded-3xl flex flex-col justify-between gap-5 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 group animate-fadeIn"
+                >
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className={`w-13 h-13 ${f.iconColor} rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110 shadow-2xs`}>
+                        <IconComp className="w-6 h-6" />
+                      </div>
+                      <span className={`text-[10px] uppercase font-bold tracking-wider px-2.5 py-1 rounded-full ${f.tagColor}`}>
+                        {f.tag}
+                      </span>
+                    </div>
+                    <h3 className="font-poppins font-bold text-lg text-[#142E27] group-hover:text-[#3E5FE0] transition-colors">
+                      {f.title}
+                    </h3>
+                    <p className="text-gray-600 text-sm leading-relaxed">
+                      {f.description}
+                    </p>
+                  </div>
 
-            {/* Feature 2: Acoustic Voice Stress */}
-            <div className="p-7 bg-[#F2F8F5] border border-[#3E6B63]/15 rounded-3xl flex flex-col gap-4 transition-all duration-300 hover:shadow-xl group">
-              <div className="flex items-center justify-between">
-                <div className="w-13 h-13 bg-rose-500/10 text-rose-600 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110">
-                  <Volume2 className="w-6 h-6" />
+                  <div className="pt-2 border-t border-[#3E6B63]/10">
+                    <Link
+                      href={f.linkHref}
+                      className="inline-flex items-center gap-1 text-xs font-bold text-[#3E5FE0] hover:underline"
+                    >
+                      <span>{f.linkLabel}</span>
+                      <ArrowUpRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                    </Link>
+                  </div>
                 </div>
-                <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-[#3E5FE0]/10 text-[#3E5FE0]">
-                  Acoustic FFT
-                </span>
-              </div>
-              <h3 className="font-poppins font-bold text-lg text-[#142E27]">
-                Acoustic Voice Catcher
-              </h3>
-              <p className="text-gray-600 text-sm leading-relaxed">
-                Evaluates vocal cadence, pitch jitter, and long conversational pauses to recognize signs of sadness, fatigue, or acute emotional strain.
-              </p>
-            </div>
-
-            {/* Feature 3: Relief Arcade */}
-            <div className="p-7 bg-[#F2F8F5] border border-[#3E6B63]/15 rounded-3xl flex flex-col gap-4 transition-all duration-300 hover:shadow-xl group">
-              <div className="flex items-center justify-between">
-                <div className="w-13 h-13 bg-amber-500/10 text-amber-600 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110">
-                  <Gamepad2 className="w-6 h-6" />
-                </div>
-                <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">
-                  5+ Minigames
-                </span>
-              </div>
-              <h3 className="font-poppins font-bold text-lg text-[#142E27]">
-                Relief Arcade Distraction
-              </h3>
-              <p className="text-gray-600 text-sm leading-relaxed">
-                Break stressful rumination loops instantly with fun, engaging challenges like Flappy Bird, Bot vs User duels, and bubble pops.
-              </p>
-            </div>
-
-            {/* Feature 4: Distress Analysis Chat */}
-            <div className="p-7 bg-[#F2F8F5] border border-[#3E6B63]/15 rounded-3xl flex flex-col gap-4 transition-all duration-300 hover:shadow-xl group">
-              <div className="flex items-center justify-between">
-                <div className="w-13 h-13 bg-[#3E5FE0]/10 text-[#3E5FE0] rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110">
-                  <MessageSquare className="w-6 h-6" />
-                </div>
-                <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800">
-                  Ultra Fast
-                </span>
-              </div>
-              <h3 className="font-poppins font-bold text-lg text-[#142E27]">
-                Distress Analysis Chat
-              </h3>
-              <p className="text-gray-600 text-sm leading-relaxed">
-                Compassionate conversations that dynamically update distress level indices through subtle semantic flags and typing cadences.
-              </p>
-            </div>
-
-            {/* Feature 5: Zero-Knowledge Journals */}
-            <div className="p-7 bg-[#F2F8F5] border border-[#3E6B63]/15 rounded-3xl flex flex-col gap-4 transition-all duration-300 hover:shadow-xl group">
-              <div className="flex items-center justify-between">
-                <div className="w-13 h-13 bg-emerald-600/10 text-emerald-700 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110">
-                  <Heart className="w-6 h-6" />
-                </div>
-                <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
-                  End-to-End
-                </span>
-              </div>
-              <h3 className="font-poppins font-bold text-lg text-[#142E27]">
-                Private Safe Journals
-              </h3>
-              <p className="text-gray-600 text-sm leading-relaxed">
-                Uncensored personal sanctuary. Express your private thoughts freely with mood tracking, trigger tags, and guaranteed encryption.
-              </p>
-            </div>
-
-            {/* Feature 6: Trend & Escalation Dashboard */}
-            <div className="p-7 bg-[#F2F8F5] border border-[#3E6B63]/15 rounded-3xl flex flex-col gap-4 transition-all duration-300 hover:shadow-xl group">
-              <div className="flex items-center justify-between">
-                <div className="w-13 h-13 bg-[#3E6B63]/15 text-[#3E6B63] rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110">
-                  <LineChart className="w-6 h-6" />
-                </div>
-                <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-[#EEF1FB] text-[#3E6B63]">
-                  30-Day Curve
-                </span>
-              </div>
-              <h3 className="font-poppins font-bold text-lg text-[#142E27]">
-                Trend Telemetry & Escalation
-              </h3>
-              <p className="text-gray-600 text-sm leading-relaxed">
-                Track your longitudinal mental wellness history with precise hover timestamps and safe multi-tier counselor bridge alerts.
-              </p>
-            </div>
-
+              );
+            })}
           </div>
         </div>
       </section>
 
-      {/* ================= TRADITIONAL VS SAATHI COMPARISON ================= */}
-      <section className="max-w-5xl mx-auto px-6 py-16 w-full">
+      {/* ================= STUDENT & COUNSELOR IMPACT CARDS DECK FORMAT ================= */}
+      <section className="max-w-6xl mx-auto px-6 py-16 w-full animate-slide-in-up">
         <div className="text-center max-w-2xl mx-auto mb-12">
+          <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/70 rounded-full text-xs font-bold text-[#142E27] mb-2 shadow-2xs">
+            <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+            <span>Student & Counselor Trust</span>
+          </div>
+          <h2 className="font-poppins font-bold text-2xl sm:text-3xl text-[#142E27]">
+            Empowering Campus Communities
+          </h2>
+          <p className="text-[#1E4339] mt-2 text-sm sm:text-base">
+            How students and mental health staff rely on SAATHI’s respectful, low-friction check-ins.
+          </p>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-6">
+          {/* Review Card 1 */}
+          <div className="bg-white/95 p-6 rounded-3xl border border-white shadow-sm flex flex-col justify-between gap-4 transition-transform hover:-translate-y-1">
+            <div className="space-y-3">
+              <div className="flex gap-1 text-amber-400">
+                {[...Array(5)].map((_, i) => (
+                  <Star key={i} className="w-4 h-4 fill-amber-400" />
+                ))}
+              </div>
+              <p className="text-gray-700 text-sm leading-relaxed italic">
+                &ldquo;During exam week my anxiety peaked. Playing 5 minutes of Flappy Bird in the Relief Arcade actually broke my panic spiral without feeling clinical.&rdquo;
+              </p>
+            </div>
+            <div className="flex items-center gap-3 pt-3 border-t border-gray-100">
+              <div className="w-8 h-8 rounded-full bg-[#3E5FE0] text-white font-bold text-xs flex items-center justify-center">
+                AK
+              </div>
+              <div>
+                <h4 className="text-xs font-bold text-[#142E27]">Ananya K.</h4>
+                <p className="text-[11px] text-gray-500">Computer Science &bull; 3rd Year</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Review Card 2 */}
+          <div className="bg-white/95 p-6 rounded-3xl border border-white shadow-sm flex flex-col justify-between gap-4 transition-transform hover:-translate-y-1">
+            <div className="space-y-3">
+              <div className="flex gap-1 text-amber-400">
+                {[...Array(5)].map((_, i) => (
+                  <Star key={i} className="w-4 h-4 fill-amber-400" />
+                ))}
+              </div>
+              <p className="text-gray-700 text-sm leading-relaxed italic">
+                &ldquo;Traditional campus mental health surveys have less than 5% participation due to stigma. SAATHI&apos;s passive telemetry bridges students to us early without violating trust.&rdquo;
+              </p>
+            </div>
+            <div className="flex items-center gap-3 pt-3 border-t border-gray-100">
+              <div className="w-8 h-8 rounded-full bg-emerald-600 text-white font-bold text-xs flex items-center justify-center">
+                DR
+              </div>
+              <div>
+                <h4 className="text-xs font-bold text-[#142E27]">Dr. R. Sharma</h4>
+                <p className="text-[11px] text-gray-500">University Student Welfare Officer</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Review Card 3 */}
+          <div className="bg-white/95 p-6 rounded-3xl border border-white shadow-sm flex flex-col justify-between gap-4 transition-transform hover:-translate-y-1">
+            <div className="space-y-3">
+              <div className="flex gap-1 text-amber-400">
+                {[...Array(5)].map((_, i) => (
+                  <Star key={i} className="w-4 h-4 fill-amber-400" />
+                ))}
+              </div>
+              <p className="text-gray-700 text-sm leading-relaxed italic">
+                &ldquo;The dark circle vision and voice check flagged my exhaustion before I admitted it to myself. The 4-7-8 breathing reset helped me sleep for the first time in days.&rdquo;
+              </p>
+            </div>
+            <div className="flex items-center gap-3 pt-3 border-t border-gray-100">
+              <div className="w-8 h-8 rounded-full bg-amber-600 text-white font-bold text-xs flex items-center justify-center">
+                PB
+              </div>
+              <div>
+                <h4 className="text-xs font-bold text-[#142E27]">Pranav B.</h4>
+                <p className="text-[11px] text-gray-500">Medical Student &bull; Final Year</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ================= TRADITIONAL VS SAATHI COMPARISON CARDS ================= */}
+      <section className="max-w-5xl mx-auto px-6 py-12 w-full animate-slide-in-up">
+        <div className="text-center max-w-2xl mx-auto mb-10">
           <h2 className="font-poppins font-bold text-2xl sm:text-3xl text-[#142E27]">
             Why SAATHI Outperforms Traditional Counseling Check-Ins
           </h2>
@@ -706,7 +988,7 @@ export default function LandingPage() {
         </div>
 
         <div className="grid md:grid-cols-2 gap-6">
-          {/* Legacy Methods */}
+          {/* Legacy Methods Card */}
           <div className="bg-white/80 backdrop-blur-xs p-7 rounded-3xl border border-rose-200 shadow-sm flex flex-col gap-4">
             <span className="text-xs font-bold text-rose-700 uppercase tracking-wider bg-rose-50 px-3 py-1 rounded-full self-start">
               Traditional Methods
@@ -731,7 +1013,7 @@ export default function LandingPage() {
             </ul>
           </div>
 
-          {/* SAATHI Intelligent Approach */}
+          {/* SAATHI Intelligent Approach Card */}
           <div className="bg-white p-7 rounded-3xl border-2 border-[#3E5FE0]/40 shadow-xl flex flex-col gap-4 relative overflow-hidden">
             <div className="absolute top-0 right-0 bg-[#3E5FE0] text-white text-[10px] font-bold px-3 py-1 rounded-bl-xl uppercase tracking-wider">
               SAATHI Standard
@@ -761,8 +1043,8 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ================= INTERACTIVE FAQ ACCORDION ================= */}
-      <section className="max-w-4xl mx-auto px-6 py-12 w-full">
+      {/* ================= INTERACTIVE FAQ ACCORDION CARDS ================= */}
+      <section className="max-w-4xl mx-auto px-6 py-12 w-full animate-slide-in-up">
         <div className="text-center mb-10">
           <h2 className="font-poppins font-bold text-2xl sm:text-3xl text-[#142E27]">
             Frequently Asked Questions
@@ -822,8 +1104,8 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ================= FINAL CTA SECTION ================= */}
-      <section className="max-w-5xl mx-auto px-6 py-20 text-center">
+      {/* ================= FINAL CTA CARD SECTION ================= */}
+      <section className="max-w-5xl mx-auto px-6 py-20 text-center animate-slide-in-up">
         <div className="bg-white p-10 sm:p-14 rounded-3xl shadow-2xl border border-white/80 relative overflow-hidden">
           <div className="max-w-2xl mx-auto space-y-6">
             <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#EEF1FB] text-[#3E5FE0] rounded-full text-xs font-bold">

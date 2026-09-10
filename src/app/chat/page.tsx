@@ -1224,7 +1224,11 @@ Take a slow breath. You can choose a therapeutic focus above, tap a prompt start
         )}
 
         {/* MESSAGE CANVAS & STREAM */}
-        <div className="flex-1 bg-white/85 backdrop-blur-xs border border-gray-200/80 rounded-2xl overflow-y-auto p-4 sm:p-6 space-y-5 flex flex-col shadow-xs">
+        <div 
+          id="chat-middle-box"
+          data-chat-box="true"
+          className="chat-middle-box flex-1 bg-white/85 backdrop-blur-xs border border-gray-200/80 rounded-2xl overflow-y-auto p-4 sm:p-6 space-y-5 flex flex-col shadow-xs"
+        >
           {messages.map((msg) => {
             const isUser = msg.sender === 'user';
             return (

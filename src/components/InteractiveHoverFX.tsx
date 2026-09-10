@@ -22,6 +22,25 @@ export default function InteractiveHoverFX() {
     const findEligibleCard = (target: HTMLElement | null): HTMLElement | null => {
       if (!target) return null;
 
+      // Check route exclusions
+      const path = (window.location.pathname || '').toLowerCase();
+
+      // 1. Exclude Relief Arcade (/arcade), Self Help (/resources), Settings (/settings)
+      if (path.startsWith('/arcade') || path.startsWith('/resources') || path.startsWith('/settings')) {
+        return null;
+      }
+
+      // 2. In Talk to Saathi (/chat), ONLY allow the middle chat box
+      if (path.startsWith('/chat')) {
+        const chatMiddleBox = target.closest<HTMLElement>(
+          '#chat-middle-box, [data-chat-box="true"], .chat-middle-box'
+        );
+        if (!chatMiddleBox) {
+          return null;
+        }
+        return chatMiddleBox;
+      }
+
       // Look up hierarchy for explicit tilt target or white card
       const candidate = target.closest<HTMLElement>(
         '[data-hover-tilt], .interactive-card, .hover-tilt, div[class*="bg-white"], section[class*="bg-white"], article[class*="bg-white"], div[class*="bg-[#ffffff]"]'
