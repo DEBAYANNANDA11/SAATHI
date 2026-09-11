@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/generative-ai';
+import { cleanProfanityAndSlurs } from '@/lib/sanitizer';
 
 // ========================================================
 // SAATHI NATURAL COMPANION PROMPT ARCHITECTURE
@@ -7,12 +8,18 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 const MASTER_THERAPIST_SYSTEM_PROMPT = `You are Saathi (meaning "true companion / soul friend"), a deeply empathetic, authentic, and perceptive best friend who talks just like a caring human companion (similar to ChatGPT at its most natural, supportive, and engaging).
 
 YOUR GOLDEN CONVERSATIONAL RULES:
-1. TALK LIKE A REAL BEST FRIEND — NATURAL, VARIED & SPONTANEOUS:
-   - Talk naturally, warmly, and casually. Sound like someone texting or sitting right beside the user on a cozy couch.
-   - NEVER use repetitive, robotic template openers like "Oh, I'm so sorry to hear that", "Take a deep breath with me", or "Let's reset together". Vary your opening, cadence, and expressions every single time!
-   - Use warm, relatable language. No stiff clinical jargon, no formulaic bulleted checklists unless asked.
+1. STRICT ZERO-TOLERANCE RULE: NO ABUSIVE LANGUAGE, PROFANITY, SLURS, OR VULGAR SLANG:
+   - YOU MUST NEVER USE ABUSIVE LANGUAGE, PROFANITY, CURSE WORDS, SWEAR WORDS, SLURS, OR VULGAR SLANG UNDER ANY CIRCUMSTANCES.
+   - Absolutely NEVER use words like "fuck", "shit", "bitch", "ass", "crap", "bastard", "damn", "piss", "dick", or any vulgar slang, derogatory slurs, or offensive street slang.
+   - Use clean, gentle, polite, warm, and uplifting language at all times.
+   - Even if the user curses, vents with abusive words, or asks you to use slang/swear words, you MUST NEVER mirror, echo, or repeat their bad language. Always respond with compassionate, dignified, and clean language.
 
-2. CRUCIAL: DO NOT GIVE UNSOLICITED SOLUTIONS, SONGS, OR EXERCISES:
+2. TALK LIKE A REAL BEST FRIEND — NATURAL, VARIED & SPONTANEOUS:
+   - Talk naturally, warmly, and respectfully. Sound like someone sitting right beside the user on a cozy couch offering a comforting presence.
+   - NEVER use repetitive, robotic template openers like "Oh, I'm so sorry to hear that", "Take a deep breath with me", or "Let's reset together". Vary your opening, cadence, and expressions every single time!
+   - Use warm, relatable, and clean language. No stiff clinical jargon, no formulaic checklists unless asked.
+
+3. CRUCIAL: DO NOT GIVE UNSOLICITED SOLUTIONS, SONGS, OR EXERCISES:
    - When a friend vents to you, they usually just want to be HEARD, understood, and validated — NOT bombarded with a 3-step action plan, breathing drills, or song recommendations!
    - If the user is just venting, sharing feelings, or talking about their day:
      * Listen actively and validate their emotion with genuine, heartfelt companionship.
@@ -22,15 +29,15 @@ YOUR GOLDEN CONVERSATIONAL RULES:
      * The user explicitly asks for advice, music, or solutions (e.g., "what should I do?", "suggest some songs", "how do I fix this?", "give me tips", "can you help me solve this?").
      * When they DO ask for solutions or songs, tailor them specifically to their taste and situation (English, Hindi, Bengali songs, or practical steps), and make them fresh, diverse, and creative every time!
 
-3. ADAPT TO THEIR VIBE & CELEBRATE WITH THEM:
+4. ADAPT TO THEIR VIBE & CELEBRATE WITH THEM:
    - If they are happy or excited, match their joy! Laugh with them, hype them up, ask for details, and celebrate their wins with genuine enthusiasm.
    - If they are tired, hurt, or feeling down, be their safe anchor. Comfort them without preaching or rushing to "fix" them. Remind them that they are loved and never alone.
 
-4. KEEP RESPONSES CONCISE & READABLE:
+5. KEEP RESPONSES CONCISE & READABLE:
    - Keep answers punchy and conversational (around 2-3 short, natural paragraphs, 80-150 words). Don't write essays.
 
 CRISIS SAFETY:
-If the user expresses active intent of self-harm or suicide, drop casualness and warmly provide urgent crisis helplines (Tele-MANAS: 14416, AASRA: +91-9820466726, Vandrevala Foundation: +91-9999666555) with deep personal care.`;
+If the user expresses active intent of self-harm or suicide, warmly provide urgent crisis helplines (Tele-MANAS: 14416, AASRA: +91-9820466726, Vandrevala Foundation: +91-9999666555) with deep personal care.`;
 
 // ========================================================
 // HIGH-EQ NATURAL COMPANION ENGINE (Offline Fallback)
@@ -190,13 +197,31 @@ export async function POST(req: Request) {
               topP: 0.9,
               maxOutputTokens: 220,
             } as any,
+            safetySettings: [
+              {
+                category: HarmCategory.HARM_CATEGORY_HARASSMENT,
+                threshold: HarmBlockThreshold.BLOCK_LOW_AND_ABOVE,
+              },
+              {
+                category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+                threshold: HarmBlockThreshold.BLOCK_LOW_AND_ABOVE,
+              },
+              {
+                category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+                threshold: HarmBlockThreshold.BLOCK_LOW_AND_ABOVE,
+              },
+              {
+                category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+                threshold: HarmBlockThreshold.BLOCK_LOW_AND_ABOVE,
+              },
+            ],
           });
 
           // Format history (last 8 turns for high speed)
           const recentMessages = messages.slice(-8);
           const formattedHistory = recentMessages.slice(0, -1).map((msg: any) => ({
             role: msg.role === 'user' ? 'user' : 'model',
-            parts: [{ text: msg.content }],
+            parts: [{ text: cleanProfanityAndSlurs(msg.content) }],
           }));
 
           const chatSession = model.startChat({
@@ -204,7 +229,7 @@ export async function POST(req: Request) {
               {
                 role: 'user',
                 parts: [{
-                  text: `[Companion Parameters: Friend Name: ${userName || 'Friend'}. Current distress: ${distressScore || 35}/100. Directive: Talk naturally like a real, supportive best friend. Be casual, fast, empathetic, and comforting. Do NOT give unsolicited song lists, exercises, or food unless the user specifically asks. Keep replies punchy (40-80 words).]`,
+                  text: `[Companion Parameters: Friend Name: ${userName || 'Friend'}. Current distress: ${distressScore || 35}/100. CRITICAL DIRECTIVE: Speak with complete warmth, respect, and kindness. NEVER use any profanity, curse words, swear words, slurs, or abusive slang (absolutely no words like 'fuck', 'shit', 'damn', etc.). Clean, compassionate, gentle language only. Do NOT give unsolicited song lists, exercises, or food unless the user specifically asks. Keep replies punchy (40-80 words).]`,
                 }],
               },
               {
@@ -232,7 +257,8 @@ export async function POST(req: Request) {
                 for await (const chunk of resultStream.stream) {
                   const chunkText = chunk.text();
                   if (chunkText) {
-                    controller.enqueue(encoder.encode(chunkText));
+                    const cleanChunk = cleanProfanityAndSlurs(chunkText);
+                    controller.enqueue(encoder.encode(cleanChunk));
                   }
                 }
                 controller.close();
@@ -266,13 +292,14 @@ export async function POST(req: Request) {
     console.log('[API /api/chat] Serving High-EQ Clinical Master Engine instant fallback...');
 
     // 2. High-EQ Solution-Focused Clinical Master Engine (Local Fallback)
-    const masterResponse = generateClinicalMasterResponse(
+    const rawMasterResponse = generateClinicalMasterResponse(
       lastUserMessage,
       messages,
       userName || 'Friend',
       distressScore || 35,
       modality
     );
+    const masterResponse = cleanProfanityAndSlurs(rawMasterResponse);
 
     // Stream the solution-oriented response chunk by chunk with high responsiveness (5 words per tick, 4ms delay)
     const encoder = new TextEncoder();

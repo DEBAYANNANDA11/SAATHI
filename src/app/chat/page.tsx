@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { db } from '@/lib/supabase';
+import { cleanProfanityAndSlurs } from '@/lib/sanitizer';
 import { 
   Send, 
   Square, 
@@ -295,7 +296,8 @@ Take a slow breath. You can choose a therapeutic focus above, tap a prompt start
         return;
       }
 
-      const cleanText = text
+      const sanitized = cleanProfanityAndSlurs(text);
+      const cleanText = sanitized
         .replace(/###/g, '')
         .replace(/##/g, '')
         .replace(/\*\*/g, '')
@@ -460,16 +462,24 @@ Take a slow breath. You can choose a therapeutic focus above, tap a prompt start
         try {
           const parsed: ChatSession[] = JSON.parse(stored);
           if (Array.isArray(parsed) && parsed.length > 0) {
-            setSessions(parsed);
+            const cleanedSessions = parsed.map(sess => ({
+              ...sess,
+              messages: (sess.messages || []).map(m => ({
+                ...m,
+                text: cleanProfanityAndSlurs(m.text)
+              }))
+            }));
+            setSessions(cleanedSessions);
             
             // Find active or first session
-            const current = parsed.find(s => s.id === activeId) || parsed[0];
+            const current = cleanedSessions.find(s => s.id === activeId) || cleanedSessions[0];
             setActiveSessionId(current.id);
             setSelectedModality(current.modality || 'compassion');
             
             // Restore messages with proper Date instances
             const restored = current.messages.map(m => ({
               ...m,
+              text: cleanProfanityAndSlurs(m.text),
               timestamp: new Date(m.timestamp)
             }));
             setMessages(restored);
@@ -854,12 +864,13 @@ Take a slow breath. You can choose a therapeutic focus above, tap a prompt start
 
         const chunk = decoder.decode(value, { stream: true });
         accumulatedText += chunk;
+        const sanitizedLiveText = cleanProfanityAndSlurs(accumulatedText);
 
         setMessages(prev => prev.map(msg => {
           if (msg.id === assistantMsgId) {
             return {
               ...msg,
-              text: accumulatedText,
+              text: sanitizedLiveText,
               isStreaming: true
             };
           }
@@ -868,13 +879,14 @@ Take a slow breath. You can choose a therapeutic focus above, tap a prompt start
       }
 
       console.log('[Saathi Client] Stream completed. Total characters received:', accumulatedText.length);
+      const safeFinalText = cleanProfanityAndSlurs(accumulatedText);
 
       // Mark complete and persist in session
       const finalMessages = updatedMessages.map(msg => {
         if (msg.id === assistantMsgId) {
           return {
             ...msg,
-            text: accumulatedText,
+            text: safeFinalText,
             isStreaming: false
           };
         }
@@ -899,7 +911,7 @@ Take a slow breath. You can choose a therapeutic focus above, tap a prompt start
 
       // Read aloud if global voice is turned on
       if (speechEnabled) {
-        speakText(accumulatedText, assistantMsgId);
+        speakText(safeFinalText, assistantMsgId);
       }
 
     } catch (err: any) {
