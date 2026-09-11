@@ -265,8 +265,8 @@ export default function LandingPage() {
       a: 'Never. All biometric face landmarking (dark circles, eye blink rates) and acoustic pitch extraction occur 100% locally in your browser memory using Web APIs. No raw video or audio files are ever transmitted to or stored on our servers.'
     },
     {
-      q: 'How does SAATHI fulfill Smart India Hackathon 2026 Problem Statement 94?',
-      a: 'PS 94 challenges us to build an unobtrusive, early distress detection system for higher education institutes. SAATHI combines passive multi-modal telemetry (typing cadence, acoustic jitter, facial strain) with a privacy-first 3-tier escalation engine.'
+      q: 'What key features does SAATHI offer for mental wellness and distress detection?',
+      a: 'SAATHI provides an all-in-one emotional support ecosystem: anonymous on-device biometric scanning (optical dark circle & facial fatigue tracking), continuous Voice Catcher with acoustic voice isolation and speech hesitation detection, an empathetic AI Companion with multilingual music therapy (Hindi, English, Bengali), reflective voice journaling, and the Relief Arcade with interactive mini-games to break acute stress.'
     },
     {
       q: 'How does the Relief Arcade help alleviate stress?',
