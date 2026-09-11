@@ -185,6 +185,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             emergency_contact_opt_in: false,
             created_at: new Date().toISOString(),
           });
+
+          // Establish initial zero distress score for new user
+          const existingScores = await db.getDistressScores(matchedId);
+          if (existingScores.length === 0) {
+            await db.createDistressScore(matchedId, 0, 'low', 'Initial baseline established: 0% distress.');
+            try {
+              localStorage.setItem('saathi_current_distress_index', '0');
+            } catch (e) {}
+          } else {
+            const lastVal = existingScores[existingScores.length - 1].score;
+            try {
+              localStorage.setItem('saathi_current_distress_index', String(lastVal));
+            } catch (e) {}
+          }
         }
         setProfile(userProfile);
         
@@ -221,6 +235,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               emergency_contact_opt_in: false,
               created_at: new Date().toISOString(),
             });
+
+            const existingScores = await db.getDistressScores(data.user.id);
+            if (existingScores.length === 0) {
+              await db.createDistressScore(data.user.id, 0, 'low', 'Initial baseline established: 0% distress.');
+              try {
+                localStorage.setItem('saathi_current_distress_index', '0');
+              } catch (e) {}
+            } else {
+              const lastVal = existingScores[existingScores.length - 1].score;
+              try {
+                localStorage.setItem('saathi_current_distress_index', String(lastVal));
+              } catch (e) {}
+            }
+          } else {
+            // Existing profile: load their latest distress score
+            try {
+              const existingScores = await db.getDistressScores(data.user.id);
+              if (existingScores.length > 0) {
+                const lastVal = existingScores[existingScores.length - 1].score;
+                localStorage.setItem('saathi_current_distress_index', String(lastVal));
+              } else {
+                localStorage.setItem('saathi_current_distress_index', '0');
+              }
+            } catch (e) {}
           }
           setProfile(userProfile);
           router.push('/dashboard');
@@ -259,6 +297,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
         setProfile(newProfile);
 
+        // Initialize zero distress baseline for new user
+        await db.createDistressScore(userId, 0, 'low', 'Initial baseline established upon signup: 0% distress.');
+        try {
+          localStorage.setItem('saathi_current_distress_index', '0');
+        } catch (e) {}
+
         if (role === 'counsellor') router.push('/counsellor');
         else if (role === 'admin') router.push('/admin');
         else router.push('/dashboard');
@@ -293,6 +337,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             created_at: new Date().toISOString(),
           });
           setProfile(newProfile);
+
+          // Initialize zero distress baseline for new user
+          await db.createDistressScore(data.user.id, 0, 'low', 'Initial baseline established upon signup: 0% distress.');
+          try {
+            localStorage.setItem('saathi_current_distress_index', '0');
+          } catch (e) {}
 
           if (data.session) {
             router.push('/dashboard');
@@ -368,6 +418,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Logout
   const logout = async () => {
+    try {
+      localStorage.removeItem('saathi_current_distress_index');
+    } catch (e) {}
     if (isMockMode) {
       localStorage.removeItem(MOCK_SESSION_KEY);
       setUser(null);

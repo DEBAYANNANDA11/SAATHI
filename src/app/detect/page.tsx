@@ -102,7 +102,7 @@ export default function BiometricScanPage() {
 
   // POWERFUL BUILT-IN VOICE CATCHER & LIVE DISTRESS INDEX
   const [isVoiceCatcherActive, setIsVoiceCatcherActive] = useState(false);
-  const [liveDistressIndex, setLiveDistressIndex] = useState(32);
+  const [liveDistressIndex, setLiveDistressIndex] = useState(0);
   const [distressAlertBanner, setDistressAlertBanner] = useState<string | null>(null);
   const [caughtKeywords, setCaughtKeywords] = useState<CaughtKeyword[]>([]);
   const [vocalTirednessDetected, setVocalTirednessDetected] = useState(false);
@@ -209,6 +209,67 @@ export default function BiometricScanPage() {
       }
     };
   }, []);
+
+  // Sync Live Distress Index & Meter: 0 for new users, last updated value for old users
+  useEffect(() => {
+    const loadUserDistress = async () => {
+      let cachedScore: number | null = null;
+      try {
+        const cached = localStorage.getItem('saathi_current_distress_index');
+        if (cached !== null && !isNaN(Number(cached))) {
+          cachedScore = Number(cached);
+        }
+      } catch (e) {}
+
+      if (user) {
+        try {
+          const scores = await db.getDistressScores(user.id);
+          if (scores.length > 0) {
+            const dbScore = scores[scores.length - 1].score;
+            const scoreToUse = cachedScore !== null ? cachedScore : dbScore;
+            setLiveDistressIndex(scoreToUse);
+            localStorage.setItem('saathi_current_distress_index', String(scoreToUse));
+          } else {
+            // New user with no previous scans: strictly 0 baseline
+            setLiveDistressIndex(0);
+            localStorage.setItem('saathi_current_distress_index', '0');
+          }
+        } catch (e) {
+          const val = cachedScore !== null ? cachedScore : 0;
+          setLiveDistressIndex(val);
+        }
+      } else {
+        // Guest / unauthenticated visitor
+        const val = cachedScore !== null ? cachedScore : 0;
+        setLiveDistressIndex(val);
+      }
+    };
+    loadUserDistress();
+
+    // Multi-page and multi-tab live synchronization
+    const handleDistressUpdate = (e: any) => {
+      if (e?.detail && typeof e.detail.score === 'number') {
+        setLiveDistressIndex(e.detail.score);
+        try {
+          localStorage.setItem('saathi_current_distress_index', String(e.detail.score));
+        } catch (err) {}
+      }
+    };
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'saathi_current_distress_index' && e.newValue !== null) {
+        const score = Number(e.newValue);
+        if (!isNaN(score)) {
+          setLiveDistressIndex(score);
+        }
+      }
+    };
+    window.addEventListener('saathi-distress-updated', handleDistressUpdate);
+    window.addEventListener('storage', handleStorageChange);
+    return () => {
+      window.removeEventListener('saathi-distress-updated', handleDistressUpdate);
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, [user]);
 
   // Ensure video element plays and attaches stream reliably whenever streamActive changes
   useEffect(() => {
@@ -380,28 +441,64 @@ export default function BiometricScanPage() {
           }
         });
 
-        // 2. Track Speech Disfluency & Stutter patterns
-        if (finalTranscript) {
-          const words = finalTranscript.trim().split(/\s+/);
+        // 2. Track Speech Disfluency, Hesitations & Stutter patterns (e.g. "uhh", "mmm", "uhhh")
+        const activeTextForStutter = (finalTranscript + ' ' + interimTranscript).trim();
+        if (activeTextForStutter) {
           const foundStutters: string[] = [];
 
+          // Detect vocal fillers & hesitations (e.g. "uhh", "mmm", "uhhh", "um", "er", "ahh")
+          const hesitationMatches = activeTextForStutter.match(/\b(u+h+|u+m+|m+m+|m+h*m+|e+r+r*|a+h+|h+m+m*)\b/gi);
+          if (hesitationMatches) {
+            hesitationMatches.forEach((h: string) => {
+              const cleanH = h.toLowerCase();
+              foundStutters.push(`"${cleanH}" (Hesitation)`);
+            });
+          }
+
+          // Word repetitions (e.g. "I I", "am am", "a a")
+          const words = activeTextForStutter.split(/\s+/);
           for (let j = 0; j < words.length - 1; j++) {
             const current = words[j].toLowerCase().replace(/[^a-z]/g, '');
             const next = words[j + 1].toLowerCase().replace(/[^a-z]/g, '');
-            if (current && current === next && current.length > 1) {
+            if (current && current === next && current.length >= 1) {
               foundStutters.push(`"${words[j]} ${words[j+1]}" (Repetition)`);
             }
           }
 
-          const hyphenStutters = finalTranscript.match(/\b([a-zA-Z]{1,3})[-—](\1[a-zA-Z]*)\b/gi);
+          // Syllable prolongations / hyphenated stutters (e.g. "b-boy", "s-stutter")
+          const hyphenStutters = activeTextForStutter.match(/\b([a-zA-Z]{1,3})[-—](\1[a-zA-Z]*)\b/gi);
           if (hyphenStutters) {
             hyphenStutters.forEach((s: string) => foundStutters.push(`"${s}" (Prolongation)`));
           }
 
-          if (foundStutters.length > 0) {
-            setStutterCount(prev => prev + foundStutters.length);
-            setDetectedStutters(prev => Array.from(new Set([...prev, ...foundStutters])));
-            setLiveDistressIndex(prev => Math.min(95, prev + (foundStutters.length * 6)));
+          // Filter out duplicates in current burst window
+          const newStutters = foundStutters.filter(s => {
+            const stutterKey = `${s}-${Math.floor(Date.now() / 6000)}`;
+            if (!seenWordsSetRef.current.has(stutterKey)) {
+              seenWordsSetRef.current.add(stutterKey);
+              return true;
+            }
+            return false;
+          });
+
+          if (newStutters.length > 0) {
+            setStutterCount(prev => prev + newStutters.length);
+            setDetectedStutters(prev => Array.from(new Set([...prev, ...newStutters])));
+            
+            // Increase and update the Live Distress Index!
+            setLiveDistressIndex(prev => {
+              const increase = newStutters.length * 7;
+              const nextScore = Math.min(98, prev + increase);
+              if (user) {
+                const tier: 'low' | 'moderate' | 'high' = nextScore >= 70 ? 'high' : nextScore >= 40 ? 'moderate' : 'low';
+                db.createDistressScore(user.id, nextScore, tier, `Voice Catcher: Speech disfluency / hesitation detected (${newStutters.join(', ')}).`).catch(() => {});
+              }
+              return nextScore;
+            });
+
+            const uniqueLabels = Array.from(new Set(newStutters.map(s => s.split(' ')[0].replace(/"/g, ''))));
+            setDistressAlertBanner(`⚡ Voice Catcher Alert: Detected micro-hesitation/stutter "${uniqueLabels.join(', ')}" (+Distress Index updated)`);
+            setTimeout(() => setDistressAlertBanner(null), 3500);
           }
 
           // Auto-append spoken text into the consultation textarea so the user can speak freely
@@ -603,9 +700,17 @@ export default function BiometricScanPage() {
       // Periodically update dark circle state
       if (frameCount % 60 === 0) {
         setOpticalDarkCirclesSeverity(computedDarkCircleSeverity);
-        // User Rule: if a user has dark circles, at least keep stress level 50
+        // User Rule: if a user has dark circles, randomize value between 50-60 (never static 50)
         if (computedDarkCircleSeverity >= 45) {
-          setLiveDistressIndex(prev => Math.max(prev, 50));
+          const darkCircleFloor = 50 + Math.floor(Math.random() * 11);
+          setLiveDistressIndex(prev => {
+            const next = Math.max(prev, darkCircleFloor);
+            try {
+              localStorage.setItem('saathi_current_distress_index', String(next));
+              window.dispatchEvent(new CustomEvent('saathi-distress-updated', { detail: { score: next } }));
+            } catch (err) {}
+            return next;
+          });
         }
       }
 
@@ -715,6 +820,20 @@ export default function BiometricScanPage() {
         // Compile diagnostic report immediately so results display with zero delay
         const generatedReport = compileDiagnosticReport(keyPressTimes.length, consistency);
         setReport(generatedReport);
+        // Link Live Distress Index & Meter directly to the final computed biometric report score!
+        setLiveDistressIndex(generatedReport.score);
+        if (typeof window !== 'undefined') {
+          try {
+            localStorage.setItem('saathi_current_distress_index', String(generatedReport.score));
+            window.dispatchEvent(new CustomEvent('saathi-distress-updated', {
+              detail: { 
+                score: generatedReport.score, 
+                tier: generatedReport.tier, 
+                explanation: generatedReport.detectedReason 
+              }
+            }));
+          } catch (e) {}
+        }
         setScanProgress('complete');
         setScanStatusText('Biometric evaluation complete. Diagnostic report compiled.');
       }
@@ -774,14 +893,20 @@ export default function BiometricScanPage() {
 
       let finalScore = calculatedScore;
 
-      // User Rule 1: If user has dark circles, at least keep stress level 50
-      if (darkCirclesDetected || hasDarkCircleMention) {
-        finalScore = Math.max(50, finalScore);
-      }
+      const hasTiredOrNegativeVoice = vocalTirednessDetected || sadCues > 0 || caughtKeywords.some(k => k.category === 'tired' || k.category === 'sad' || k.category === 'stress' || k.category === 'crisis');
 
-      // User Rule 2: If voice feels tired or negative, then 60 around stress
-      const hasTiredOrNegativeVoice = vocalTirednessDetected || sadCues > 0 || caughtKeywords.length > 0;
-      if (hasTiredOrNegativeVoice) {
+      // User Rule 1: After noticing dark circles don't set stress level always to 50 rather randomize between 50-60
+      if (darkCirclesDetected || hasDarkCircleMention) {
+        const darkCircleRandomValue = 50 + Math.floor(Math.random() * 11); // strictly random 50 to 60 inclusive
+        const extraNegativeCues = sadCues + caughtKeywords.length + (stutterCount > 0 ? 1 : 0);
+        if (extraNegativeCues > 1) {
+          const escalation = Math.min(30, (extraNegativeCues - 1) * 6);
+          finalScore = Math.min(96, darkCircleRandomValue + escalation);
+        } else {
+          // Strictly randomized between 50 and 60 when dark circles are noticed! Never static 50!
+          finalScore = darkCircleRandomValue;
+        }
+      } else if (hasTiredOrNegativeVoice) {
         finalScore = Math.max(60, finalScore);
 
         // User Rule 3: If more signs of negativity in messages and stuff, then more!
@@ -798,6 +923,11 @@ export default function BiometricScanPage() {
         finalScore = Math.min(28, Math.max(14, Math.round(calculatedScore * 0.4)));
       } else if (caughtKeywords.length > 2 || vocalTirednessDetected) {
         finalScore = Math.max(liveDistressIndex, Math.min(96, finalScore));
+      }
+
+      // User Rule: stress index should not be 50 always after biometric scan rather randomize it between 50-60
+      if (finalScore === 50) {
+        finalScore = 50 + Math.floor(Math.random() * 11);
       }
 
       let tier: 'low' | 'moderate' | 'high' = 'low';
@@ -918,8 +1048,16 @@ export default function BiometricScanPage() {
       };
     } catch (err) {
       console.error('Biometric report calculation error, using safe fallback:', err);
+      const fallbackRandomScore = 50 + Math.floor(Math.random() * 11); // strictly random 50 to 60
+      const computedFallback = Math.max(fallbackRandomScore, liveDistressIndex);
+      const safeFinalScore = computedFallback === 50 ? (51 + Math.floor(Math.random() * 10)) : computedFallback;
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem('saathi_current_distress_index', String(safeFinalScore));
+        } catch (e) {}
+      }
       return {
-        score: Math.max(50, liveDistressIndex),
+        score: safeFinalScore,
         tier: 'moderate',
         facialTension: 35,
         facialFatigue: 60,
@@ -1138,7 +1276,7 @@ export default function BiometricScanPage() {
                         ? 'bg-amber-50 text-amber-700 border-amber-200'
                         : 'bg-emerald-50 text-emerald-700 border-emerald-200'
                   }`}>
-                    {liveDistressIndex >= 70 ? 'High Distress / Fatigue' : liveDistressIndex >= 40 ? 'Moderate Strain / Tiredness' : 'Stable Baseline'}
+                    {liveDistressIndex >= 70 ? 'High Distress / Fatigue' : liveDistressIndex >= 40 ? 'Moderate Strain / Tiredness' : liveDistressIndex === 0 ? 'Optimal Calm (Zero Distress)' : 'Stable Baseline'}
                   </span>
                   <span className="font-poppins font-black text-xl text-gray-900">
                     {liveDistressIndex}%
@@ -1156,7 +1294,7 @@ export default function BiometricScanPage() {
                         ? 'bg-gradient-to-r from-emerald-500 to-amber-500'
                         : 'bg-gradient-to-r from-[#8FCBB0] to-emerald-500'
                   }`}
-                  style={{ width: `${Math.min(100, Math.max(10, liveDistressIndex))}%` }}
+                  style={{ width: `${Math.min(100, Math.max(liveDistressIndex === 0 ? 0 : 5, liveDistressIndex))}%` }}
                 />
               </div>
 
@@ -1260,10 +1398,28 @@ export default function BiometricScanPage() {
             </p>
 
             <textarea
-              placeholder="Speak aloud or type how you feel... E.g. 'I feel so tired lately, my head aches and I have dark circles under my eyes...'"
+              placeholder="Speak aloud or type how you feel... E.g. 'hello i am uhh a boy, i am mmm 20 year old and uhhh i love football'"
               value={typedText}
               onKeyDown={handleKeyDown}
-              onChange={(e) => setTypedText(e.target.value)}
+              onChange={(e) => {
+                const val = e.target.value;
+                setTypedText(val);
+
+                // Scan for hesitations / stutters in typed text if entered
+                const hesitationMatches = val.match(/\b(u+h+|u+m+|m+m+|m+h*m+|e+r+r*|a+h+|h+m+m*)\b/gi);
+                if (hesitationMatches && hesitationMatches.length > stutterCount) {
+                  const diff = hesitationMatches.length - stutterCount;
+                  const newLabels = hesitationMatches.slice(stutterCount).map(h => `"${h.toLowerCase()}" (Hesitation)`);
+                  setStutterCount(hesitationMatches.length);
+                  setDetectedStutters(prev => Array.from(new Set([...prev, ...newLabels])));
+                  setLiveDistressIndex(prev => {
+                    const next = Math.min(98, prev + (diff * 6));
+                    return next;
+                  });
+                  setDistressAlertBanner(`⚡ Voice/Input Alert: Detected micro-hesitation/stutter "${hesitationMatches.slice(-diff).join(', ')}" (+Distress Index updated)`);
+                  setTimeout(() => setDistressAlertBanner(null), 3500);
+                }
+              }}
               disabled={scanProgress === 'scanning'}
               className="w-full min-h-[120px] p-4 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#3E6B63] disabled:bg-gray-50 leading-relaxed"
             />
@@ -1603,12 +1759,19 @@ export default function BiometricScanPage() {
                   {/* Reset Scan Button */}
                   <button
                     type="button"
-                    onClick={() => {
+                    onClick={async () => {
                       setScanProgress('idle');
                       setReport(null);
                       setTypedText('');
                       setCaughtKeywords([]);
-                      setLiveDistressIndex(32);
+                      setStutterCount(0);
+                      setDetectedStutters([]);
+                      if (user) {
+                        const latest = await db.getLatestDistressScore(user.id);
+                        setLiveDistressIndex(latest.score);
+                      } else {
+                        setLiveDistressIndex(0);
+                      }
                     }}
                     className="w-full py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl text-xs flex items-center justify-center gap-1.5 transition-colors mt-2"
                   >

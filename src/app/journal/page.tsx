@@ -181,7 +181,7 @@ export default function JournalPage() {
         if (finalTranscript.trim()) {
           const lowerSpoken = finalTranscript.toLowerCase();
           
-          // Voice Stress Analysis
+          // Voice Stress & Hesitation Analysis
           const sadKeywords = ['sad', 'depressed', 'tired', 'exhausted', 'stress', 'stressed', 'anxious', 'scared', 'crying', 'heavy', 'hurt', 'pain', 'lonely', 'hopeless', 'overwhelmed'];
           let hasStress = false;
           for (const word of sadKeywords) {
@@ -190,12 +190,16 @@ export default function JournalPage() {
               break;
             }
           }
+          if (lowerSpoken.match(/\b(u+h+|u+m+|m+m+|m+h*m+|e+r+r*|a+h+|h+m+m*)\b/i)) {
+            hasStress = true;
+          }
 
           if (hasStress) {
             setVoiceStressDetected(true);
             if (lowerSpoken.includes('tired') || lowerSpoken.includes('exhausted')) setSelectedMood('Tired');
             else if (lowerSpoken.includes('stress') || lowerSpoken.includes('pressure')) setSelectedMood('Stressed');
             else if (lowerSpoken.includes('sad') || lowerSpoken.includes('lonely') || lowerSpoken.includes('crying')) setSelectedMood('Sad');
+            else setSelectedMood('Stressed');
           }
 
           setJournalText(prev => prev ? prev.trim() + ' ' + finalTranscript.trim() : finalTranscript.trim());
@@ -210,23 +214,17 @@ export default function JournalPage() {
         setIsListening(false);
       };
 
-      speechRecognitionRef.current = recognition;
       recognition.start();
+      speechRecognitionRef.current = recognition;
     } catch (err) {
-      console.error('Speech recognition error:', err);
+      console.error(err);
       setIsListening(false);
     }
   };
 
-  // Submit and Save Entry
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!journalText.trim()) return;
-
-    if (isListening && speechRecognitionRef.current) {
-      try { speechRecognitionRef.current.stop(); } catch (err) {}
-      setIsListening(false);
-    }
+  // Save new entry
+  const handleSaveEntry = async () => {
+    if (!user || !journalText.trim()) return;
 
     setSaving(true);
     setError(null);
@@ -256,23 +254,44 @@ export default function JournalPage() {
       setEntries(updatedList);
       localStorage.setItem(getStorageKey(user.id), JSON.stringify(updatedList));
 
-      // Asynchronously update distress baseline based on recent journal trends
-      const recentScores = updatedList.slice(0, 5).map(x => Number(x.sentiment_score));
-      const avgSentiment = recentScores.reduce((acc, curr) => acc + curr, 0) / Math.max(1, recentScores.length);
-      let newScoreVal = Math.round(50 - (avgSentiment * 40));
-      newScoreVal = Math.max(10, Math.min(95, newScoreVal));
+      // Fetch latest distress baseline (0 for new users, last updated value for old users)
+      const existingScores = await db.getDistressScores(user.id);
+      const currentBaseline = existingScores.length > 0 ? existingScores[existingScores.length - 1].score : 0;
+
+      const lowerContent = journalText.toLowerCase();
+      const isNegativeMood = ['Tired', 'Sad', 'Stressed'].includes(selectedMood);
+      const negativeWords = ['sad', 'depressed', 'tired', 'exhausted', 'stress', 'stressed', 'anxious', 'scared', 'crying', 'cry', 'tears', 'heavy', 'hurt', 'hurting', 'lonely', 'alone', 'overwhelmed', 'fatigue', 'insomnia', 'burnout', 'pressure', 'hopeless', 'dark circle', 'dark circles', 'cant sleep', "can't sleep"];
+      const negativeCount = negativeWords.filter(w => lowerContent.includes(w)).length;
+      const isNegativeTiringOrSad = score < -0.1 || isNegativeMood || negativeCount > 0;
+
+      let newScoreVal = currentBaseline;
+      if (isNegativeTiringOrSad) {
+        // User Rule: when user says negative tiring or sad things in journal update, increase little the stress index value
+        const delta = Math.max(5, Math.min(15, 6 + (negativeCount * 2) + (isNegativeMood ? 3 : 0)));
+        newScoreVal = Math.min(95, currentBaseline + delta);
+
+        // If dark circles mentioned, ensure at least randomized 50-60 floor
+        if (lowerContent.includes('dark circle') || lowerContent.includes('dark circles')) {
+          const darkCircleFloor = 50 + Math.floor(Math.random() * 11);
+          newScoreVal = Math.max(newScoreVal, darkCircleFloor);
+        }
+      } else if (['Grateful', 'Peaceful', 'Energized'].includes(selectedMood) || score > 0.2) {
+        newScoreVal = Math.max(0, currentBaseline - 4);
+      }
 
       let newTier: 'low' | 'moderate' | 'high' = 'low';
-      if (newScoreVal >= 75) newTier = 'high';
+      if (newScoreVal >= 70) newTier = 'high';
       else if (newScoreVal >= 40) newTier = 'moderate';
 
       const explanation = newTier === 'high' 
         ? 'Distress index elevated based on emotional journaling cues.' 
         : newTier === 'moderate' 
           ? 'Mild emotional tension noted in journal. Compassionate rest suggested.'
-          : 'Emotional equilibrium steady.';
+          : newScoreVal === 0
+            ? 'Optimal calm baseline (Zero distress).'
+            : 'Emotional equilibrium steady.';
 
-      db.createDistressScore(user.id, newScoreVal, newTier, explanation).catch(() => {});
+      await db.createDistressScore(user.id, newScoreVal, newTier, explanation);
 
       setJournalText('');
       setSelectedMood('Neutral');
@@ -283,6 +302,18 @@ export default function JournalPage() {
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!journalText.trim()) return;
+
+    if (isListening && speechRecognitionRef.current) {
+      try { speechRecognitionRef.current.stop(); } catch (err) {}
+      setIsListening(false);
+    }
+
+    await handleSaveEntry();
   };
 
   // Delete a journal entry

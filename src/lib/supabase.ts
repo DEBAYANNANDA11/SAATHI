@@ -399,15 +399,39 @@ export const db = {
     return data || [];
   },
 
+  async getLatestDistressScore(userId: string): Promise<DistressScore> {
+    const scores = await this.getDistressScores(userId);
+    if (scores.length > 0) {
+      return scores[scores.length - 1];
+    }
+    // For new users with no history, baseline distress index is strictly 0
+    return {
+      id: 'default-zero-' + userId,
+      user_id: userId,
+      score: 0,
+      tier: 'low',
+      explanation: 'Initial emotional baseline: 0% distress. Ready for first scan or check-in.',
+      computed_at: new Date().toISOString()
+    };
+  },
+
   async createDistressScore(userId: string, score: number, tier: 'low' | 'moderate' | 'high', explanation: string): Promise<DistressScore> {
     const newScore: DistressScore = {
       id: typeof window !== 'undefined' ? crypto.randomUUID() : Math.random().toString(),
       user_id: userId,
-      score,
+      score: Math.max(0, Math.min(100, Math.round(score))),
       tier,
       explanation,
       computed_at: new Date().toISOString()
     };
+
+    // Cache latest score locally for instantaneous multi-tab and multi-page linking
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem(`saathi_latest_distress_${userId}`, JSON.stringify(newScore));
+        window.dispatchEvent(new CustomEvent('saathi-distress-updated', { detail: newScore }));
+      } catch (e) {}
+    }
 
     if (isMockMode) {
       initMockDb();

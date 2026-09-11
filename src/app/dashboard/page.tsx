@@ -41,27 +41,78 @@ export default function UserDashboard() {
   const [showCopingModal, setShowCopingModal] = useState(false);
   const [cuesFound, setCuesFound] = useState<string[]>([]);
 
-  // Load latest distress score
+  // Load latest distress score: always equal to Live Distress Index Meter
   useEffect(() => {
     if (!user) return;
     const fetchScores = async () => {
+      // Check if a live distress index meter score was recently updated on /detect
+      let liveMeterScore: number | null = null;
+      try {
+        const cached = localStorage.getItem('saathi_current_distress_index');
+        if (cached !== null && !isNaN(Number(cached))) {
+          liveMeterScore = Number(cached);
+        }
+      } catch (e) {}
+
       const scores = await db.getDistressScores(user.id);
       if (scores.length > 0) {
-        // Get the latest computed score (sorted chronologically, so take the last one)
-        setLatestScore(scores[scores.length - 1]);
+        const lastScore = scores[scores.length - 1];
+        // If live meter was updated, keep Your Distress Index and Live Distress Index Meter strictly equal
+        const effectiveScore = liveMeterScore !== null ? liveMeterScore : lastScore.score;
+        const effectiveTier: 'low' | 'moderate' | 'high' = effectiveScore >= 70 ? 'high' : effectiveScore >= 40 ? 'moderate' : 'low';
+        setLatestScore({
+          ...lastScore,
+          score: effectiveScore,
+          tier: effectiveTier,
+        });
       } else {
-        // Fallback default low distress score
+        // Fallback default low distress score: strictly 0 for new users unless scan was run
+        const score = liveMeterScore !== null ? liveMeterScore : 0;
+        const tier: 'low' | 'moderate' | 'high' = score >= 70 ? 'high' : score >= 40 ? 'moderate' : 'low';
         setLatestScore({
           id: 'default',
           user_id: user.id,
-          score: 28,
-          tier: 'low',
-          explanation: 'No recent distress logs. Emotion baseline is optimal.',
+          score,
+          tier,
+          explanation: score === 0 
+            ? 'New user emotional baseline initialized at 0. Ready for first scan or check-in.' 
+            : 'Synchronized with Live Distress Index Meter.',
           computed_at: new Date().toISOString()
         });
       }
     };
     fetchScores();
+
+    // Multi-page real-time synchronization: Live Distress Index Meter = Your Distress Index always
+    const handleDistressUpdate = (e: any) => {
+      if (e?.detail && typeof e.detail.score === 'number') {
+        const score = e.detail.score;
+        const tier = score >= 70 ? 'high' : score >= 40 ? 'moderate' : 'low';
+        setLatestScore({
+          id: e.detail.id || 'live-sync',
+          user_id: user.id,
+          score,
+          tier: e.detail.tier || tier,
+          explanation: e.detail.explanation || 'Real-time sync with Live Distress Index Meter',
+          computed_at: new Date().toISOString()
+        });
+      }
+    };
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'saathi_current_distress_index' && e.newValue !== null) {
+        const score = Number(e.newValue);
+        if (!isNaN(score)) {
+          const tier = score >= 70 ? 'high' : score >= 40 ? 'moderate' : 'low';
+          setLatestScore(prev => prev ? { ...prev, score, tier } : null);
+        }
+      }
+    };
+    window.addEventListener('saathi-distress-updated', handleDistressUpdate);
+    window.addEventListener('storage', handleStorageChange);
+    return () => {
+      window.removeEventListener('saathi-distress-updated', handleDistressUpdate);
+      window.removeEventListener('storage', handleStorageChange);
+    };
   }, [user]);
 
   if (!user || !profile) return null;
@@ -117,8 +168,12 @@ export default function UserDashboard() {
     setResetSuccess(false);
     try {
       const explanation = 'Stress level manually reset to 0. Optimal calm baseline restored.';
+      try {
+        localStorage.setItem('saathi_current_distress_index', '0');
+      } catch (err) {}
       const newScore = await db.createDistressScore(user.id, 0, 'low', explanation);
       setLatestScore(newScore);
+      window.dispatchEvent(new CustomEvent('saathi-distress-updated', { detail: newScore }));
       setResetSuccess(true);
       setTimeout(() => {
         setResetSuccess(false);
@@ -175,15 +230,14 @@ export default function UserDashboard() {
 
       await db.createEntry(user.id, 'journal', checkinContent, sentiment);
 
-      // Recalculate Distress Score
-      const scores = await db.getDistressScores(user.id);
-      const entries = await db.getEntries(user.id);
-      
-      const recentSentiment = entries.slice(0, 5).reduce((acc, curr) => acc + Number(curr.sentiment_score), 0) / Math.min(entries.length, 5);
-      
-      // Calculate score
-      let newScoreVal = Math.round(50 - (recentSentiment * 40));
-      newScoreVal = Math.max(0, Math.min(100, newScoreVal));
+      // Recalculate Distress Score: Incrementally adjust current baseline
+      const currentVal = latestScore?.score ?? 0;
+      let newScoreVal = currentVal;
+      if (selectedMood === 'sad' || selectedMood === 'stressed' || sentiment < -0.1) {
+        newScoreVal = Math.min(95, currentVal + (selectedMood === 'stressed' ? 10 : 7));
+      } else if (selectedMood === 'happy' || sentiment > 0.2) {
+        newScoreVal = Math.max(0, currentVal - 5);
+      }
 
       let newTier: 'low' | 'moderate' | 'high' = 'low';
       if (newScoreVal >= 75) newTier = 'high';
@@ -197,6 +251,10 @@ export default function UserDashboard() {
 
       const newScore = await db.createDistressScore(user.id, newScoreVal, newTier, explanation);
       setLatestScore(newScore);
+      try {
+        localStorage.setItem('saathi_current_distress_index', String(newScoreVal));
+        window.dispatchEvent(new CustomEvent('saathi-distress-updated', { detail: newScore }));
+      } catch (err) {}
 
       setQuickCheckinText('');
       setSelectedMood(null);
@@ -341,7 +399,12 @@ export default function UserDashboard() {
         
         {/* LEFT COLUMN: DISTRESS GAUGE */}
         <div className="bg-white p-8 rounded-2xl shadow-md border border-gray-100 flex flex-col items-center gap-6 justify-center">
-          <h3 className="font-poppins font-bold text-lg text-[#3E6B63] text-center">Your Distress Index</h3>
+          <div className="text-center flex flex-col items-center gap-1">
+            <h3 className="font-poppins font-bold text-lg text-[#3E6B63] text-center">Your Distress Index</h3>
+            <span className="text-[10px] px-2.5 py-0.5 rounded-full font-bold bg-indigo-50 text-[#3E5FE0] border border-indigo-100 inline-flex items-center gap-1 mt-0.5">
+              <Activity className="w-3 h-3 animate-pulse" /> Linked to Live Distress Index Meter
+            </span>
+          </div>
           
           {/* SVG Circular Ring Gauge */}
           <div className="relative w-44 h-44 flex items-center justify-center">

@@ -375,7 +375,7 @@ Take a slow breath. You can choose a therapeutic focus above, tap a prompt start
             break;
           }
         }
-        if (transcript.match(/\b([a-zA-Z]{1,3})[-—](\1[a-zA-Z]*)\b/i)) {
+        if (transcript.match(/\b([a-zA-Z]{1,3})[-—](\1[a-zA-Z]*)\b/i) || transcript.match(/\b(u+h+|u+m+|m+m+|m+h*m+|e+r+r*|a+h+|h+m+m*)\b/i)) {
           hasStutter = true;
         }
 
@@ -392,17 +392,25 @@ Take a slow breath. You can choose a therapeutic focus above, tap a prompt start
         sadVoiceKeywords.forEach(w => { if (lowerVoice.includes(w)) sadSpokenCues++; });
 
         if (crisisVoiceWords.some(w => lowerVoice.includes(w))) {
-          setCurrentScore(88);
+          setCurrentScore(92);
           setCurrentTier('high');
           setShowCrisisBanner(true);
         } else if (sadSpokenCues > 0 || hasStutter) {
-          const updatedScore = Math.min(85, Math.max(currentScore ?? 35, 52 + (sadSpokenCues * 10) + (hasStutter ? 10 : 0)));
+          // Incrementally increase stress on negative/tiring/sad or stuttered voice
+          const base = currentScore ?? 0;
+          const increase = Math.max(5, (sadSpokenCues * 5) + (hasStutter ? 8 : 0));
+          const updatedScore = Math.min(96, base + increase);
           setCurrentScore(updatedScore);
-          setCurrentTier(updatedScore >= 75 ? 'high' : 'moderate');
+          const computedTier: 'low' | 'moderate' | 'high' = updatedScore >= 70 ? 'high' : updatedScore >= 40 ? 'moderate' : 'low';
+          setCurrentTier(computedTier);
+          if (user) {
+            db.createDistressScore(user.id, updatedScore, computedTier, 'Voice cues: Speech disfluency and emotional strain recorded.').catch(() => {});
+          }
         } else if (['happy', 'great', 'awesome', 'good', 'joy', 'excited', 'calm', 'peaceful'].some(w => lowerVoice.includes(w))) {
-          const updatedScore = Math.max(15, Math.min(currentScore ?? 35, 30));
+          const base = currentScore ?? 0;
+          const updatedScore = Math.max(0, base - 5);
           setCurrentScore(updatedScore);
-          setCurrentTier('low');
+          setCurrentTier(updatedScore >= 70 ? 'high' : updatedScore >= 40 ? 'moderate' : 'low');
         }
 
         setInputText(prev => prev ? prev + ' ' + transcript : transcript);
@@ -492,7 +500,7 @@ Take a slow breath. You can choose a therapeutic focus above, tap a prompt start
 
     loadSessions();
 
-    // Fetch distress score baseline
+    // Fetch distress score baseline: 0 for new users, last updated value for old users
     const fetchScores = async () => {
       try {
         const scores = await db.getDistressScores(user.id);
@@ -504,13 +512,29 @@ Take a slow breath. You can choose a therapeutic focus above, tap a prompt start
             setShowCrisisBanner(true);
           }
         } else {
-          setCurrentScore(32);
+          // Strictly 0 for new users
+          setCurrentScore(0);
           setCurrentTier('low');
         }
-      } catch (e) {}
+      } catch (e) {
+        setCurrentScore(0);
+        setCurrentTier('low');
+      }
     };
 
     fetchScores();
+
+    // Listen to real-time distress index update events across application
+    const handleDistressUpdate = (e: any) => {
+      if (e?.detail && typeof e.detail.score === 'number') {
+        setCurrentScore(e.detail.score);
+        if (e.detail.tier) setCurrentTier(e.detail.tier);
+      }
+    };
+    window.addEventListener('saathi-distress-updated', handleDistressUpdate);
+    return () => {
+      window.removeEventListener('saathi-distress-updated', handleDistressUpdate);
+    };
   }, [user, profile]);
 
   // Save sessions to localStorage
@@ -722,9 +746,9 @@ Take a slow breath. You can choose a therapeutic focus above, tap a prompt start
     const sentiment = analyzeSentiment(trimmed);
     const hasDarkCircles = lowerTrimmed.includes('dark circle') || lowerTrimmed.includes('dark circles');
     const negativeMatches = negativeLexicon.filter(w => lowerTrimmed.includes(w)).length;
-    const isTiredOrNegative = sentiment < -0.15 || negativeMatches > 0 || lowerTrimmed.includes('tired') || lowerTrimmed.includes('exhausted');
+    const isTiredOrNegative = sentiment < -0.15 || negativeMatches > 0 || lowerTrimmed.includes('tired') || lowerTrimmed.includes('exhausted') || lowerTrimmed.includes('sad');
 
-    let scoreVal = currentScore || 32;
+    let scoreVal = currentScore ?? 0;
     let tier: 'low' | 'moderate' | 'high' = 'low';
 
     if (warningLexicon.some(w => lowerTrimmed.includes(w))) {
@@ -732,17 +756,24 @@ Take a slow breath. You can choose a therapeutic focus above, tap a prompt start
       scoreVal = 92;
       setShowCrisisBanner(true);
     } else if (isTiredOrNegative) {
-      // User Rule: around 60 stress, plus more if more signs of negativity
-      const extraEscalation = Math.min(35, (negativeMatches - 1) * 7);
-      scoreVal = Math.min(95, 60 + Math.max(0, extraEscalation));
-      tier = scoreVal >= 70 ? 'high' : 'moderate';
+      // User Rule: When user says negative, tiring, or sad things to the bot, increase little the stress index value
+      const delta = Math.max(5, Math.min(15, 6 + (negativeMatches * 2)));
+      scoreVal = Math.min(96, (currentScore ?? 0) + delta);
+      
+      // If dark circles mentioned, ensure at least randomized 50-60 floor
+      if (hasDarkCircles) {
+        const darkCircleFloor = 50 + Math.floor(Math.random() * 11);
+        scoreVal = Math.max(scoreVal, darkCircleFloor);
+      }
+      tier = scoreVal >= 70 ? 'high' : scoreVal >= 40 ? 'moderate' : 'low';
     } else if (hasDarkCircles) {
-      // User Rule: if user has dark circles, at least keep stress level 50
-      scoreVal = Math.max(50, scoreVal);
+      // User Rule: If user has dark circles, randomize value between 50-60 (never always 50)
+      const darkCircleFloor = 50 + Math.floor(Math.random() * 11);
+      scoreVal = Math.max(darkCircleFloor, currentScore ?? 0);
       tier = 'moderate';
     } else if (sentiment > 0.2) {
-      scoreVal = Math.max(15, Math.min(35, scoreVal - 8));
-      tier = 'low';
+      scoreVal = Math.max(0, (currentScore ?? 0) - 5);
+      tier = scoreVal >= 70 ? 'high' : scoreVal >= 40 ? 'moderate' : 'low';
     }
 
     const explanation = tier === 'high' 

@@ -166,7 +166,7 @@ export const CopingSession: React.FC<CopingSessionProps> = ({
   const saveStressRecovery = async () => {
     try {
       // Lower Distress index by 15 points
-      const newScore = Math.max(10, initialScore - 15);
+      const newScore = Math.max(0, initialScore - 15);
       
       let tier: 'low' | 'moderate' | 'high' = 'low';
       if (newScore >= 75) tier = 'high';

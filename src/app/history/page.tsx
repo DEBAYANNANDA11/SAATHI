@@ -48,30 +48,16 @@ export default function HistoryPage() {
         scores = await db.getDistressScores(user.id);
       }
 
-      // If user has fewer than 2 scores (new user or guest), seed a realistic 14-day history curve
-      if (scores.length < 2) {
-        const baseDate = Date.now();
-        const demoCurve = [24, 30, 42, 65, 76, 84, 68, 52, 45, 38, 55, 62, 30, scores.length === 1 ? scores[0].score : 18];
-        const seededScores: DistressScore[] = [];
-        for (let i = 0; i < demoCurve.length; i++) {
-          const daysAgo = demoCurve.length - 1 - i;
-          const timestamp = new Date(baseDate - daysAgo * 24 * 3600 * 1000 + i * 1800000).toISOString();
-          const score = demoCurve[i];
-          const tier: 'low' | 'moderate' | 'high' = score >= 75 ? 'high' : score >= 40 ? 'moderate' : 'low';
-          seededScores.push({
-            id: `seed-${i}`,
-            user_id: user?.id || 'guest',
-            score,
-            tier,
-            explanation: tier === 'high' 
-              ? 'Elevated stress: High task load & cognitive fatigue reported.' 
-              : tier === 'moderate' 
-                ? 'Moderate tension: Vocal fatigue and mild anxiety cues in check-ins.' 
-                : 'Balanced baseline: Steady respiration and optimal calm.',
-            computed_at: timestamp
-          });
-        }
-        scores = seededScores;
+      // For new users with 0 recorded scores, display a clean 0 baseline
+      if (scores.length === 0) {
+        scores = [{
+          id: 'initial-zero',
+          user_id: user?.id || 'guest',
+          score: 0,
+          tier: 'low',
+          explanation: 'Initial baseline established: 0% distress. Optimal calm.',
+          computed_at: new Date().toISOString()
+        }];
       }
 
       // Sort strictly chronologically
@@ -112,6 +98,14 @@ export default function HistoryPage() {
       }
     };
     loadScores();
+
+    const handleDistressUpdate = () => {
+      loadScores();
+    };
+    window.addEventListener('saathi-distress-updated', handleDistressUpdate);
+    return () => {
+      window.removeEventListener('saathi-distress-updated', handleDistressUpdate);
+    };
   }, [user]);
 
   // Dynamic floating tooltip accurately displaying the specific hovered data point
