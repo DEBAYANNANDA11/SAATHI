@@ -34,7 +34,7 @@ YOUR GOLDEN CONVERSATIONAL RULES:
    - If they are tired, hurt, or feeling down, be their safe anchor. Comfort them without preaching or rushing to "fix" them. Remind them that they are loved and never alone.
 
 5. KEEP RESPONSES CONCISE & READABLE:
-   - Keep answers punchy and conversational (around 2-3 short, natural paragraphs, 80-150 words). Don't write essays.
+   - Keep answers punchy and conversational (around 1-2 short, natural paragraphs, 40-80 words). Don't write long essays.
 
 CRISIS SAFETY:
 If the user expresses active intent of self-harm or suicide, warmly provide urgent crisis helplines (Tele-MANAS: 14416, AASRA: +91-9820466726, Vandrevala Foundation: +91-9999666555) with deep personal care.`;
@@ -175,7 +175,8 @@ export async function POST(req: Request) {
 
     // 1. Live Google Gemini Engine (Prioritizing ultra-fast flash-lite)
     if (apiKey !== '') {
-      const candidateModels = ['gemini-flash-lite-latest', 'gemini-2.5-flash', 'gemini-flash-latest'];
+      // Exclusively use sub-second / fastest models
+      const candidateModels = ['gemini-flash-lite-latest', 'gemini-2.5-flash'];
       const now = Date.now();
       const genAI = new GoogleGenerativeAI(apiKey);
 
@@ -189,14 +190,21 @@ export async function POST(req: Request) {
 
         try {
           console.log(`[API /api/chat] Attempting ultra-fast stream with Gemini model "${modelName}"...`);
+          
+          // Ultra-fast generation config: disable thinking for 2.5-flash, cap tokens at 140
+          const generationConfig: any = {
+            temperature: 0.65,
+            topP: 0.85,
+            maxOutputTokens: 140,
+          };
+          if (modelName.includes('2.5')) {
+            generationConfig.thinkingConfig = { thinkingBudget: 0 };
+          }
+
           const model = genAI.getGenerativeModel({
             model: modelName,
             systemInstruction: MASTER_THERAPIST_SYSTEM_PROMPT,
-            generationConfig: {
-              temperature: 0.7,
-              topP: 0.9,
-              maxOutputTokens: 220,
-            } as any,
+            generationConfig,
             safetySettings: [
               {
                 category: HarmCategory.HARM_CATEGORY_HARASSMENT,
@@ -217,8 +225,8 @@ export async function POST(req: Request) {
             ],
           });
 
-          // Format history (last 8 turns for high speed)
-          const recentMessages = messages.slice(-8);
+          // Format history (trimmed to last 4 turns for rapid TTFT prompt evaluation)
+          const recentMessages = messages.slice(-4);
           const formattedHistory = recentMessages.slice(0, -1).map((msg: any) => ({
             role: msg.role === 'user' ? 'user' : 'model',
             parts: [{ text: cleanProfanityAndSlurs(msg.content) }],
@@ -242,10 +250,10 @@ export async function POST(req: Request) {
             ],
           });
 
-          // 3500ms safety timeout: prevents hanging if a model is slow or stalls
+          // 1800ms safety timeout: rapid failover to prevent waiting on stalled requests
           const resultStream = await withTimeout(
             chatSession.sendMessageStream(lastUserMessage),
-            3500,
+            1800,
             `Gemini stream init (${modelName})`
           );
           console.log(`[API /api/chat] Successfully opened stream with model "${modelName}". Streaming tokens...`);

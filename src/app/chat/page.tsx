@@ -807,20 +807,21 @@ Take a slow breath. You can choose a therapeutic focus above, tap a prompt start
     const abortController = new AbortController();
     abortControllerRef.current = abortController;
 
-    // Safety timeout: abort after 25s to prevent infinite spinner
+    // Safety timeout: abort after 15s to prevent infinite spinner
     const timeoutId = setTimeout(() => {
       if (abortControllerRef.current) {
-        console.warn('[Saathi Client] Safety timeout reached (25s). Aborting stream...');
+        console.warn('[Saathi Client] Safety timeout reached (15s). Aborting stream...');
         abortControllerRef.current.abort();
       }
-    }, 25000);
+    }, 15000);
 
     try {
       console.log('[Saathi Client] Sending message to /api/chat at', new Date().toISOString(), 'Payload size:', trimmed.length);
 
+      // Fast history slice (last 4 turns) for ultra-low latency
       const historyPayload = messages
         .filter(m => !m.id.startsWith('welcome'))
-        .slice(-10)
+        .slice(-4)
         .map(m => ({
           role: m.sender === 'user' ? 'user' : 'model',
           content: m.text
